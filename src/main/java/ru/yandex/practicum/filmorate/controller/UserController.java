@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controllerTests;
+package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
