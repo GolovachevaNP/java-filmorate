@@ -10,17 +10,17 @@ import java.time.LocalDate;
 
 @Data
 public class Film {
-    Long id; // целочисленный идентификатор
+    private Long id; // целочисленный идентификатор
 
     @NotBlank(message = "Название не может быть пустым")
-    String name; // название
+    private String name; // название
 
     @Size(max = 200, message = "Максимальная длина описания: 200 символов")
-    String description; // описание
+    private String description; // описание
 
     @NotNull(message = "Дата релиза должна быть указана")
-    LocalDate releaseDate; // дата релиза
+    private LocalDate releaseDate; // дата релиза
 
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
-    int duration; // продолжительность фильма
+    private int duration; // продолжительность фильма
 }

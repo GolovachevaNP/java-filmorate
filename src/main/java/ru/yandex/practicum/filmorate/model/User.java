@@ -9,16 +9,16 @@ import java.time.LocalDate;
 
 @Data
 public class User {
-    Long id; // целочисленный идентификатор
+    private Long id; // целочисленный идентификатор
 
     @NotBlank(message = "Электронная почта не может быть пустой")
     @Email(message = "Электронная почта должна содержать символ '@'")
-    String email; // электронная почта
+    private String email; // электронная почта
 
     @NotBlank(message = "Логин не может быть пустым")
-    String login; // логин пользователя
+    private String login; // логин пользователя
 
-    String name; // имя для отображения
+    private String name; // имя для отображения
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
-    LocalDate birthday; // дата рождения
+    private LocalDate birthday; // дата рождения
 }
