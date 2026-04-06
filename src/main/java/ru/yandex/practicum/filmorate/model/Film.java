@@ -7,10 +7,13 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
     private Long id; // целочисленный идентификатор
+    private Set<Long> likes = new HashSet<>();
 
     @NotBlank(message = "Название не может быть пустым")
     private String name; // название
