@@ -1,26 +1,49 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    // проверка выполнения необходимых условий
+    private void validateUser(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            log.warn("Ошибка валидации: не указана электронная почта");
+            throw new ConditionsNotMetException("Электронная почта не может быть пустой");
+        }
+        if (!user.getEmail().contains("@")) {
+            log.warn("Ошибка валидации: указан некорректный адрес электронной почты");
+            throw new ConditionsNotMetException("Электронная почта должна содержать символ '@'");
+        }
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            log.warn("Ошибка валидации: указан некорректный логин");
+            throw new ConditionsNotMetException("Логин не может быть пустым и содержать пробелы");
+        }
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+            log.warn("Ошибка валидации: указана некорректная дата рождения");
+            throw new ConditionsNotMetException("Дата рождения не может быть в будущем");
+        }
+
+        // имя для отображения может быть пустым — в таком случае будет использован логин
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 
     // создание пользователя
     public User create(User user) {
+        validateUser(user);
         User createdUser = userStorage.create(user);
         log.debug("Создание пользователя: id={}", createdUser.getId());
         return createdUser;
@@ -28,6 +51,7 @@ public class UserService {
 
     // обновление пользователя
     public User update(User user) {
+        validateUser(user);
         User updatedUser = userStorage.update(user);
         log.debug("Обновление пользователя: id={}", updatedUser.getId());
         return updatedUser;
@@ -55,8 +79,8 @@ public class UserService {
         User user = userStorage.findById(userId);
         User friend = userStorage.findById(friendId);
 
-        boolean addedToUser = user.getFriends().add(friendId);
-        boolean addedToFriend = friend.getFriends().add(userId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
         return user;
@@ -67,8 +91,8 @@ public class UserService {
         User user = userStorage.findById(userId);
         User friend = userStorage.findById(friendId);
 
-        boolean removedFromUser = user.getFriends().remove(friendId);
-        boolean removedFromFriend = friend.getFriends().remove(userId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
 
         log.info("Удаления пользователя friendId={} из друзей пользователя userId={}", userId, friendId);
     }

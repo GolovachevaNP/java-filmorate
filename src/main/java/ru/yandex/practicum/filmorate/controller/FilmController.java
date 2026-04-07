@@ -1,56 +1,25 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
+@RequiredArgsConstructor
 public class FilmController {
 
     private final FilmService filmService;
 
-    @Autowired
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
-
-    // проверка выполнения необходимых условий
-    private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Ошибка валидации: не указано название фильма");
-            throw new ConditionsNotMetException("Название не может быть пустым");
-        }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
-            log.warn("Ошибка валидации: превышено разрешённое количество символов в описании");
-            throw new ConditionsNotMetException("Длина описания должна быть не выше 200 символов");
-        }
-        if (film.getReleaseDate() == null) {
-            log.warn("Ошибка валидации: не указана дата релиза");
-            throw new ConditionsNotMetException("Дата релиза должна быть указана");
-        }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Ошибка валидации: указана некорректная дата релиза");
-            throw new ConditionsNotMetException("Дата релиза должна быть не раньше 28 декабря 1895 года");
-        }
-        if (film.getDuration() <= 0) {
-            log.warn("Ошибка валидации: указана некорректная продолжительность фильма");
-            throw new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом");
-        }
-    }
-
     // добавление фильма
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        validateFilm(film);
         Film createdFilm = filmService.create(film);
         log.info("Фильм создан: id={}, name='{}'", createdFilm.getId(), createdFilm.getName());
         return createdFilm;
@@ -59,11 +28,6 @@ public class FilmController {
     // обновление фильма
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        if (film.getId() == null) {
-            log.warn("Ошибка обновления: не указан id фильма");
-            throw new ConditionsNotMetException("Id должен быть указан");
-        }
-        validateFilm(film);
         Film updatedFilm = filmService.update(film);
         log.info("Обновлён фильм: id={}, name='{}'", updatedFilm.getId(), updatedFilm.getName());
         return updatedFilm;

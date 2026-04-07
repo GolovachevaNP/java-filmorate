@@ -31,6 +31,7 @@ class FilmControllerTest {
     void shouldCreateFilmWhenDataIsValid() {
 
         Film film = new Film();
+        film.setId(1L);
         film.setName("Фильм");
         film.setDescription("Описание фильма");
         film.setReleaseDate(LocalDate.of(2005, 11, 12));
@@ -64,6 +65,7 @@ class FilmControllerTest {
 
         Film film = new Film();
         film.setName("Фильм");
+        film.setId(1L);
         film.setDescription("Ф".repeat(200));
         film.setReleaseDate(LocalDate.of(2005, 11, 12));
         film.setDuration(122);
@@ -90,6 +92,7 @@ class FilmControllerTest {
 
         Film film = new Film();
         film.setName("Фильм");
+        film.setId(1L);
         film.setDescription("Описание фильма");
         film.setReleaseDate(LocalDate.of(1895, 12, 28));
         film.setDuration(122);
