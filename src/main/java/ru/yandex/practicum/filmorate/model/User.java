@@ -6,14 +6,13 @@ import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 public class User {
     private Long id; // целочисленный идентификатор
-    private Set<Long> friends = new HashSet<>();
-
+    private Map<Long, FriendshipStatus> friends = new HashMap<>(); // ключ - id друга, значение - статус дружбы
 
     @NotBlank(message = "Электронная почта не может быть пустой")
     @Email(message = "Электронная почта должна содержать символ '@'")
@@ -23,6 +22,7 @@ public class User {
     private String login; // логин пользователя
 
     private String name; // имя для отображения
+
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday; // дата рождения
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -79,8 +80,12 @@ public class UserService {
         User user = userStorage.findById(userId);
         User friend = userStorage.findById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        if (FriendshipStatus.UNCONFIRMED.equals(friend.getFriends().get(userId))) {
+            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
+        } else {
+            user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+        }
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
         return user;
@@ -94,15 +99,16 @@ public class UserService {
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
 
-        log.info("Удаления пользователя friendId={} из друзей пользователя userId={}", userId, friendId);
+        log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
     }
 
     // получение списка друзей
     public Collection<User> getFriends(Long userId) {
         User user = userStorage.findById(userId);
 
-        Collection<User> friends = user.getFriends().stream()
-                .map(userStorage::findById)
+        Collection<User> friends = user.getFriends().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(FriendshipStatus.CONFIRMED))
+                .map(entry -> userStorage.findById(entry.getKey()))
                 .toList();
 
         log.debug("Получение списка друзей пользователя userId={}", userId);
@@ -114,9 +120,10 @@ public class UserService {
         User user = userStorage.findById(userId);
         User otherUser = userStorage.findById(otherUserId);
 
-        Collection<User> commonFriends = user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(userStorage::findById)
+        Collection<User> commonFriends = user.getFriends().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(FriendshipStatus.CONFIRMED))
+                .filter(entry -> otherUser.getFriends().get(entry.getKey()).equals(FriendshipStatus.CONFIRMED))
+                .map(entry -> userStorage.findById(entry.getKey()))
                 .toList();
 
         log.debug("Получение списка общих друзей пользователей userId={}, otherUserId={}", userId, otherUserId);
