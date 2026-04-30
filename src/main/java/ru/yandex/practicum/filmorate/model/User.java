@@ -12,7 +12,6 @@ import java.util.Map;
 @Data
 public class User {
     private Long id; // целочисленный идентификатор
-    private Map<Long, FriendshipStatus> friends = new HashMap<>(); // ключ - id друга, значение - статус дружбы
 
     @NotBlank(message = "Электронная почта не может быть пустой")
     @Email(message = "Электронная почта должна содержать символ '@'")
@@ -25,4 +24,6 @@ public class User {
 
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday; // дата рождения
+
+    private Map<Long, FriendshipStatus> friends = new HashMap<>(); // ключ - id друга, значение - статус дружбы
 }

@@ -7,13 +7,14 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
 public class Film {
     private Long id; // целочисленный идентификатор
-    private Set<Long> likes = new HashSet<>(); // набор id пользователей, поставивших лайк фильму
 
     @NotBlank(message = "Название не может быть пустым")
     private String name; // название
@@ -27,9 +28,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private int duration; // продолжительность фильма
 
-    // @NotNull(message = "Рейтинг MPA должен быть указан")
-    private MpaRating mpaRating; // возрастной рейтинг
-
-   // @NotNull(message = "Жанр фильма должен быть указан")
-    private Set<Genre> genres = new HashSet<>(); // возрастной рейтинг
+    private MpaRating mpa; // возрастной рейтинг
+    private List<Genre> genres = new ArrayList<>(); // жанры фильма
+    private Set<Long> likes = new HashSet<>(); // набор id пользователей, поставивших лайк фильму
 }

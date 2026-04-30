@@ -1,21 +1,23 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
 
-@RequiredArgsConstructor
 @Service
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     // проверка выполнения необходимых условий
     private void validateUser(User user) {
@@ -43,6 +45,7 @@ public class UserService {
     }
 
     // создание пользователя
+    // INSERT_QUERY
     public User create(User user) {
         validateUser(user);
         User createdUser = userStorage.create(user);
@@ -51,6 +54,7 @@ public class UserService {
     }
 
     // обновление пользователя
+    // UPDATE_QUERY
     public User update(User user) {
         validateUser(user);
         User updatedUser = userStorage.update(user);
@@ -59,13 +63,15 @@ public class UserService {
     }
 
     // получение списка всех пользователей
+    // FIND_ALL_QUERY
     public Collection<User> findAll() {
         log.debug("Получение списка всех пользователей");
         return userStorage.findAll();
     }
 
     // получение конкретного пользователя
-    public User getUser(Long userId) {
+    // FIND_BY_ID_QUERY
+    public User findById(Long userId) {
         log.debug("Получение пользователя с id={}", userId);
         return userStorage.findById(userId);
     }
@@ -77,27 +83,15 @@ public class UserService {
             throw new ConditionsNotMetException("Нельзя добавить самого себя в друзья");
         }
 
-        User user = userStorage.findById(userId);
-        User friend = userStorage.findById(friendId);
-
-        if (FriendshipStatus.UNCONFIRMED.equals(friend.getFriends().get(userId))) {
-            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
-            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
-        } else {
-            user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
-        }
+        userStorage.addFriend(userId, friendId);
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
-        return user;
+        return userStorage.findById(userId);
     }
 
     // удаление из друзей
     public void deleteFriend(Long userId, Long friendId) {
-        User user = userStorage.findById(userId);
-        User friend = userStorage.findById(friendId);
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        userStorage.deleteFriend(userId, friendId);
 
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
     }
@@ -106,9 +100,8 @@ public class UserService {
     public Collection<User> getFriends(Long userId) {
         User user = userStorage.findById(userId);
 
-        Collection<User> friends = user.getFriends().entrySet().stream()
-                .filter(entry -> entry.getValue().equals(FriendshipStatus.CONFIRMED))
-                .map(entry -> userStorage.findById(entry.getKey()))
+        Collection<User> friends = user.getFriends().keySet().stream()
+                .map(userStorage::findById)
                 .toList();
 
         log.debug("Получение списка друзей пользователя userId={}", userId);
@@ -120,10 +113,9 @@ public class UserService {
         User user = userStorage.findById(userId);
         User otherUser = userStorage.findById(otherUserId);
 
-        Collection<User> commonFriends = user.getFriends().entrySet().stream()
-                .filter(entry -> entry.getValue().equals(FriendshipStatus.CONFIRMED))
-                .filter(entry -> otherUser.getFriends().get(entry.getKey()).equals(FriendshipStatus.CONFIRMED))
-                .map(entry -> userStorage.findById(entry.getKey()))
+        Collection<User> commonFriends = user.getFriends().keySet().stream()
+                .filter(friendId -> otherUser.getFriends().containsKey(friendId))
+                .map(userStorage::findById)
                 .toList();
 
         log.debug("Получение списка общих друзей пользователей userId={}, otherUserId={}", userId, otherUserId);

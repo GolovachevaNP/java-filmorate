@@ -44,7 +44,7 @@ public class UserController {
     // получение пользователя по id
     @GetMapping("/{id}")
     public User getUser(@PathVariable Long id) {
-        User user = userService.getUser(id);
+        User user = userService.findById(id);
         log.info("Найден пользователь: id={}, login='{}'", user.getId(), user.getLogin());
         return user;
     }
@@ -61,7 +61,7 @@ public class UserController {
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
         userService.deleteFriend(id, friendId);
-        User user = userService.getUser(id);
+        User user = userService.findById(id);
         log.info("Пользователь userId={} удалил из друзей пользователя friendId={}", id, friendId);
         return user;
     }

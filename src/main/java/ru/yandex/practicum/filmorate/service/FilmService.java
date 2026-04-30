@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -11,12 +11,19 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.time.LocalDate;
 import java.util.Collection;
 
-@RequiredArgsConstructor
 @Service
 @Slf4j
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+
+    public FilmService(
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            @Qualifier("userDbStorage") UserStorage userStorage
+    ) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
+    }
 
     // проверка выполнения необходимых условий
     private void validateFilm(Film film) {
@@ -40,9 +47,13 @@ public class FilmService {
             log.warn("Ошибка валидации: указана некорректная продолжительность фильма");
             throw new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом");
         }
+        if (film.getMpa() == null || film.getMpa().getId() == null) {
+            throw new ConditionsNotMetException("Рейтинг MPA должен быть указан");
+        }
     }
 
     // добавление фильма
+    // INSERT_QUERY
     public Film create(Film film) {
         validateFilm(film);
         Film createdFilm = filmStorage.create(film);
@@ -51,6 +62,7 @@ public class FilmService {
     }
 
     // обновление фильма
+    // UPDATE_QUERY
     public Film update(Film film) {
         validateFilm(film);
         filmStorage.findById(film.getId());
@@ -60,12 +72,14 @@ public class FilmService {
     }
 
     // получение всех фильмов
+    // FIND_ALL_QUERY
     public Collection<Film> findAll() {
         log.debug("Получение списка всех фильмов");
         return filmStorage.findAll();
     }
 
     // получение фильма по id
+    // FIND_BY_ID_QUERY
     public Film getFilm(Long filmId) {
         log.debug("Получение фильма по id={}", filmId);
         return filmStorage.findById(filmId);
@@ -73,29 +87,23 @@ public class FilmService {
 
     // добавление лайка
     public Film addLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId);
+        filmStorage.findById(filmId);
         userStorage.findById(userId);
 
-        boolean added = film.getLikes().add(userId);
-        if (added) {
-            log.info("Добавление лайка: filmId={}, userId={}", filmId, userId);
-        } else {
-            log.debug("Лайк уже существовал: filmId={}, userId={}", filmId, userId);
-        }
-        return film;
+        filmStorage.addLike(filmId, userId);
+
+        log.info("Добавление лайка: filmId={}, userId={}", filmId, userId);
+        return filmStorage.findById(filmId);
     }
 
     // удаление лайка
     public void deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId);
+        filmStorage.findById(filmId);
         userStorage.findById(userId);
 
-        boolean removed = film.getLikes().remove(userId);
-        if (removed) {
-            log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);
-        } else {
-            log.debug("Лайк не существовал: filmId={}, userId={}", filmId, userId);
-        }
+        filmStorage.deleteLike(filmId, userId);
+
+        log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);
     }
 
     // вывод 10 наиболее популярных фильмов по количеству лайков
