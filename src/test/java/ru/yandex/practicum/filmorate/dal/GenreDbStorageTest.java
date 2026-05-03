@@ -7,6 +7,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 
 import java.util.Collection;
 
@@ -14,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import(GenreDbStorage.class)
+@Import({GenreDbStorage.class, GenreRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class GenreDbStorageTest {
 
@@ -31,7 +33,7 @@ class GenreDbStorageTest {
     // Проверка поиска жанра по id
     @Test
     void shouldFindGenreById() {
-        Genre genre = genreStorage.findById(1);
+        Genre genre = genreStorage.findById(1).orElseThrow();
 
         assertThat(genre.getId()).isEqualTo(1);
         assertThat(genre.getName()).isEqualTo("Комедия");

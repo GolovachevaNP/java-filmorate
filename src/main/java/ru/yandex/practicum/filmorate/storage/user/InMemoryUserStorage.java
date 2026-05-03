@@ -10,11 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class InMemoryUserStorage implements UserStorage {
+public class InMemoryUserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
 
-    @Override
     public User create(User user) {
         user.setId(getNextId());
         users.put(user.getId(), user);
@@ -22,7 +21,6 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    @Override
     public User update(User user) {
         if (!users.containsKey(user.getId())) {
             log.warn("Пользователь не найден: id={}", user.getId());
@@ -34,14 +32,12 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    @Override
     public Collection<User> findAll() {
         Collection<User> usersList = users.values();
         log.debug("Запрос на получение всех пользователей");
         return usersList;
     }
 
-    @Override
     public User findById(Long id) {
         User user = users.get(id);
         if (user == null) {
@@ -51,13 +47,11 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    @Override
     public void delete(Long id) {
         log.debug("Удаление пользователя с id={}", id);
         users.remove(id);
     }
 
-    @Override
     public void addFriend(Long userId, Long friendId) {
         User user = findById(userId);
         findById(friendId);
@@ -65,7 +59,6 @@ public class InMemoryUserStorage implements UserStorage {
         user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
     }
 
-    @Override
     public void deleteFriend(Long userId, Long friendId) {
         User user = findById(userId);
         findById(friendId);

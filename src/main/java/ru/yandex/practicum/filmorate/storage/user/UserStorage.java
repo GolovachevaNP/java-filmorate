@@ -1,8 +1,12 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
 public interface UserStorage {
     // создание пользователя
@@ -11,7 +15,7 @@ public interface UserStorage {
 
     // обновление пользователя
     // UPDATE_QUERY
-    User update(User newUser);
+    void update(String userEmail, String userLogin, String userName, Date userBirthday, Long userId);
 
     // получение списка всех пользователей
     // FIND_ALL_QUERY
@@ -19,7 +23,7 @@ public interface UserStorage {
 
     // получение конкретного пользователя
     // FIND_BY_ID_QUERY
-    User findById(Long id);
+    Optional<User> findById(Long id);
 
     // удаление пользователя
     // DELETE_QUERY
@@ -32,4 +36,8 @@ public interface UserStorage {
     // удаление друга
     // DELETE_FRIEND_QUERY
     void deleteFriend(Long userId, Long friendId);
+
+    // поиск друзей
+    // FIND_FRIENDS_QUERY
+    Map<Long, FriendshipStatus> findFriends(User user);
 }

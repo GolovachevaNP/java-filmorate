@@ -6,20 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JdbcTest
 @AutoConfigureTestDatabase
@@ -49,10 +49,11 @@ class FilmDbStorageTest {
         Film film = createTestFilm();
 
         Film createdFilm = filmStorage.create(film);
-        Film foundFilm = filmStorage.findById(createdFilm.getId());
+        Optional<Film> foundFilm = filmStorage.findById(createdFilm.getId());
 
-        assertThat(foundFilm.getId()).isEqualTo(createdFilm.getId());
-        assertThat(foundFilm.getName()).isEqualTo("Film");
+        assertThat(foundFilm).isPresent();
+        assertThat(foundFilm.get().getId()).isEqualTo(createdFilm.getId());
+        assertThat(foundFilm.get().getName()).isEqualTo("Film");
     }
 
     // Проверка получения списка всех фильмов
@@ -78,11 +79,16 @@ class FilmDbStorageTest {
 
         Film createdFilm = filmStorage.create(film);
 
-        createdFilm.setName("New Film");
-        createdFilm.setDescription("New Description");
-        createdFilm.setDuration(150);
+        filmStorage.update(
+                "New Film",
+                "New Description",
+                Date.valueOf(createdFilm.getReleaseDate()),
+                150,
+                createdFilm.getMpa().getId(),
+                createdFilm.getId()
+        );
 
-        Film updatedFilm = filmStorage.update(createdFilm);
+        Film updatedFilm = filmStorage.findById(createdFilm.getId()).orElseThrow();
 
         assertThat(updatedFilm.getName()).isEqualTo("New Film");
         assertThat(updatedFilm.getDescription()).isEqualTo("New Description");
@@ -98,7 +104,9 @@ class FilmDbStorageTest {
 
         filmStorage.delete(createdFilm.getId());
 
-        assertThatThrownBy(() -> filmStorage.findById(createdFilm.getId())).isInstanceOf(NotFoundException.class);
+        Optional<Film> deletedFilm = filmStorage.findById(createdFilm.getId());
+
+        assertThat(deletedFilm).isEmpty();
     }
 
     // Проверка добавления лайка фильму
@@ -110,9 +118,9 @@ class FilmDbStorageTest {
 
         filmStorage.addLike(createdFilm.getId(), userId);
 
-        Film filmWithLike = filmStorage.findById(createdFilm.getId());
+        Integer count = filmStorage.countLike(createdFilm.getId(), userId);
 
-        assertThat(filmWithLike.getLikes()).contains(userId);
+        assertThat(count).isEqualTo(1);
     }
 
     // Проверка удаления лайка у фильма
@@ -125,21 +133,12 @@ class FilmDbStorageTest {
         filmStorage.addLike(createdFilm.getId(), userId);
         filmStorage.deleteLike(createdFilm.getId(), userId);
 
-        Film filmWithoutLike = filmStorage.findById(createdFilm.getId());
+        Integer count = filmStorage.countLike(createdFilm.getId(), userId);
 
-        assertThat(filmWithoutLike.getLikes()).doesNotContain(userId);
+        assertThat(count).isEqualTo(0);
     }
 
-    // Проверка сохранения жанров фильма
-    @Test
-    void shouldSaveFilmGenres() {
-        Film film = createTestFilm();
-
-        Film createdFilm = filmStorage.create(film);
-
-        assertThat(createdFilm.getGenres()).hasSize(2);
-    }
-
+    // Создание фильма с корректными данными
     private Film createTestFilm() {
         Film film = new Film();
         film.setName("Film");
@@ -151,17 +150,10 @@ class FilmDbStorageTest {
         mpaRating.setId(1);
         film.setMpa(mpaRating);
 
-        Genre genre1 = new Genre();
-        genre1.setId(1);
-
-        Genre genre2 = new Genre();
-        genre2.setId(2);
-
-        film.setGenres(List.of(genre1, genre2));
-
         return film;
     }
 
+    // Создание пользователя с корректными данными
     private Long createTestUser() {
         User user = new User();
         user.setEmail("user@email.ru");

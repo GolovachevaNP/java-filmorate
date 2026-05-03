@@ -50,19 +50,17 @@ public class FilmController {
 
     // добавление лайка пользователя
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Long id, @PathVariable Long userId) {
-        Film film = filmService.addLike(id, userId);
-        log.info("Добавлен лайк: filmId={}, userId={}, likesCount={}", id, userId, film.getLikes().size());
-        return film;
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+        log.info("Добавлен лайк: filmId={}, userId={}", id, userId);
     }
 
     // удаление лайка пользователя
     @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.deleteLike(id, userId);
-        Film film = filmService.getFilm(id);
-        log.info("Удалён лайк: filmId={}, userId={}, likesCount={}", id, userId, film.getLikes().size());
-        return film;
+        filmService.getFilm(id);
+        log.info("Удалён лайк: filmId={}, userId={}", id, userId);
     }
 
     // вывод 10 наиболее популярных фильмов по количеству лайков

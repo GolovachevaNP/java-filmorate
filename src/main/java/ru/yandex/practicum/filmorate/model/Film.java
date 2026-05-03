@@ -8,9 +8,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Data
 public class Film {
@@ -30,5 +28,5 @@ public class Film {
 
     private MpaRating mpa; // возрастной рейтинг
     private List<Genre> genres = new ArrayList<>(); // жанры фильма
-    private Set<Long> likes = new HashSet<>(); // набор id пользователей, поставивших лайк фильму
+    private Long likeCount; // количество лайков фильма
 }

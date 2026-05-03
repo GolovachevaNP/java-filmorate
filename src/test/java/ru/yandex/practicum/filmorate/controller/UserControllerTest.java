@@ -1,37 +1,27 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
+@Transactional
 class UserControllerTest {
 
+    @Autowired
     private UserController userController;
-
-    @BeforeEach
-    void setUp() {
-        UserStorage userStorage = new InMemoryUserStorage();
-        UserService userService = new UserService(userStorage);
-        userController = new UserController(userService);
-    }
 
     // Проверка успешного создания пользователя при корректных данных
     @Test
     void shouldCreateUserWhenDataIsValid() {
-
-        User user = new User();
-        user.setEmail("user@yandex.ru");
-        user.setLogin("login");
-        user.setName("Пользователь");
-        user.setBirthday(LocalDate.of(1999, 6, 25));
+        User user = createValidUser();
 
         User createdUser = userController.create(user);
 
@@ -45,12 +35,8 @@ class UserControllerTest {
     // Проверка получения ошибки при пустом email
     @Test
     void shouldThrowExceptionWhenEmailIsBlank() {
-
-        User user = new User();
+        User user = createValidUser();
         user.setEmail(" ");
-        user.setLogin("login");
-        user.setName("Пользователь");
-        user.setBirthday(LocalDate.of(1999, 6, 25));
 
         assertThrows(ConditionsNotMetException.class, () -> userController.create(user));
     }
@@ -58,12 +44,8 @@ class UserControllerTest {
     // Проверка получения ошибки при email без символа '@'
     @Test
     void shouldThrowExceptionWhenEmailWithoutAt() {
-
-        User user = new User();
+        User user = createValidUser();
         user.setEmail("useryandex.ru");
-        user.setLogin("login");
-        user.setName("Пользователь");
-        user.setBirthday(LocalDate.of(1999, 6, 25));
 
         assertThrows(ConditionsNotMetException.class, () -> userController.create(user));
     }
@@ -71,12 +53,8 @@ class UserControllerTest {
     // Проверка получения ошибки при логине с пробелами
     @Test
     void shouldThrowExceptionWhenLoginContainsSpaces() {
-
-        User user = new User();
-        user.setEmail("user@yandex.ru");
+        User user = createValidUser();
         user.setLogin("log in");
-        user.setName("Пользователь");
-        user.setBirthday(LocalDate.of(1999, 6, 25));
 
         assertThrows(ConditionsNotMetException.class, () -> userController.create(user));
     }
@@ -84,12 +62,8 @@ class UserControllerTest {
     // Проверка использования логина вместо имени при пустом имени
     @Test
     void shouldReplaceEmptyNameWithLogin() {
-
-        User user = new User();
-        user.setEmail("user@yandex.ru");
-        user.setLogin("login");
+        User user = createValidUser();
         user.setName(" ");
-        user.setBirthday(LocalDate.of(1999, 6, 25));
 
         User createdUser = userController.create(user);
 
@@ -99,11 +73,7 @@ class UserControllerTest {
     // Проверка отсутствия ошибки при сегодняшней дате рождения (при граничном значении)
     @Test
     void shouldAllowBirthdayToday() {
-
-        User user = new User();
-        user.setEmail("user@yandex.ru");
-        user.setLogin("login");
-        user.setName("Пользователь");
+        User user = createValidUser();
         user.setBirthday(LocalDate.now());
 
         assertDoesNotThrow(() -> userController.create(user));
@@ -112,13 +82,19 @@ class UserControllerTest {
     // Проверка получения ошибки при дате рождения в будущем
     @Test
     void shouldThrowExceptionWhenBirthdayInFuture() {
+        User user = createValidUser();
+        user.setBirthday(LocalDate.now().plusDays(1));
 
+        assertThrows(ConditionsNotMetException.class, () -> userController.create(user));
+    }
+
+    // Создание пользователя с корректными данными
+    private User createValidUser() {
         User user = new User();
         user.setEmail("user@yandex.ru");
         user.setLogin("login");
         user.setName("Пользователь");
-        user.setBirthday(LocalDate.now().plusDays(1));
-
-        assertThrows(ConditionsNotMetException.class, () -> userController.create(user));
+        user.setBirthday(LocalDate.of(1999, 6, 25));
+        return user;
     }
 }

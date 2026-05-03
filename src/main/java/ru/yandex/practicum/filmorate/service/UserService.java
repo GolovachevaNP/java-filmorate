@@ -4,11 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -49,16 +52,26 @@ public class UserService {
     public User create(User user) {
         validateUser(user);
         User createdUser = userStorage.create(user);
+
         log.debug("Создание пользователя: id={}", createdUser.getId());
+
         return createdUser;
     }
 
     // обновление пользователя
     // UPDATE_QUERY
-    public User update(User user) {
-        validateUser(user);
-        User updatedUser = userStorage.update(user);
+    public User update(User updatedUser) {
+        if (updatedUser.getId() == null) {
+            throw new NotFoundException("Id пользователя должен быть указан");
+        }
+        validateUser(updatedUser);
+        findById(updatedUser.getId());
+
+        userStorage.update(updatedUser.getEmail(), updatedUser.getLogin(), updatedUser.getName(),
+                updatedUser.getBirthday() == null ? null : Date.valueOf(updatedUser.getBirthday()), updatedUser.getId());
+
         log.debug("Обновление пользователя: id={}", updatedUser.getId());
+
         return updatedUser;
     }
 
@@ -66,18 +79,32 @@ public class UserService {
     // FIND_ALL_QUERY
     public Collection<User> findAll() {
         log.debug("Получение списка всех пользователей");
+
         return userStorage.findAll();
     }
 
-    // получение конкретного пользователя
+    // получение пользователя по id
     // FIND_BY_ID_QUERY
     public User findById(Long userId) {
         log.debug("Получение пользователя с id={}", userId);
-        return userStorage.findById(userId);
+        Optional<User> optionalUser = userStorage.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+
+        User user = optionalUser.get();
+        user.setFriends(userStorage.findFriends(user));
+
+        return user;
     }
 
     // добавление в друзья
-    public User addFriend(Long userId, Long friendId) {
+    // ADD_FRIEND_QUERY
+    public void addFriend(Long userId, Long friendId) {
+        findById(userId);
+        findById(friendId);
+
         if (userId.equals(friendId)) {
             log.warn("Попытка пользователя добавиться к себе в друзья: userId={}", userId);
             throw new ConditionsNotMetException("Нельзя добавить самого себя в друзья");
@@ -86,11 +113,14 @@ public class UserService {
         userStorage.addFriend(userId, friendId);
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
-        return userStorage.findById(userId);
     }
 
     // удаление из друзей
+    // DELETE_FRIEND_QUERY
     public void deleteFriend(Long userId, Long friendId) {
+        findById(userId);
+        findById(friendId);
+
         userStorage.deleteFriend(userId, friendId);
 
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
@@ -98,10 +128,10 @@ public class UserService {
 
     // получение списка друзей
     public Collection<User> getFriends(Long userId) {
-        User user = userStorage.findById(userId);
+        User user = findById(userId);
 
         Collection<User> friends = user.getFriends().keySet().stream()
-                .map(userStorage::findById)
+                .map(this::findById)
                 .toList();
 
         log.debug("Получение списка друзей пользователя userId={}", userId);
@@ -110,12 +140,12 @@ public class UserService {
 
     // получение списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        User user = userStorage.findById(userId);
-        User otherUser = userStorage.findById(otherUserId);
+        User user = findById(userId);
+        User otherUser = findById(otherUserId);
 
         Collection<User> commonFriends = user.getFriends().keySet().stream()
                 .filter(friendId -> otherUser.getFriends().containsKey(friendId))
-                .map(userStorage::findById)
+                .map(this::findById)
                 .toList();
 
         log.debug("Получение списка общих друзей пользователей userId={}, otherUserId={}", userId, otherUserId);

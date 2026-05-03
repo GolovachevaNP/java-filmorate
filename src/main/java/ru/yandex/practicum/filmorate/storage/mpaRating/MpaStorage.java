@@ -3,9 +3,12 @@ package ru.yandex.practicum.filmorate.storage.mpaRating;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.util.Collection;
+import java.util.Optional;
 
-public interface MpaRatingStorage {
+public interface MpaStorage {
     Collection<MpaRating> findAll();
 
-    MpaRating findById(int id);
+    Optional<MpaRating> findById(int id);
+
+    Integer count(Integer id);
 }
