@@ -13,14 +13,12 @@ public class InMemoryFilmStorage {
 
     private final Map<Long, Film> films = new HashMap<>();
 
-
     public Film create(Film film) {
         film.setId(getNextId());
         films.put(film.getId(), film);
         log.debug("Сохранение фильма с id={}", film.getId());
         return film;
     }
-
 
     public Film update(Film film) {
         if (!films.containsKey(film.getId())) {
@@ -33,13 +31,11 @@ public class InMemoryFilmStorage {
         return film;
     }
 
-
     public Collection<Film> findAll() {
         Collection<Film> result = films.values();
         log.debug("Запрос на получение всех фильмов");
         return result;
     }
-
 
     public Film findById(Long id) {
         Film film = films.get(id);
@@ -49,7 +45,6 @@ public class InMemoryFilmStorage {
         }
         return film;
     }
-
 
     public void delete(Long id) {
         log.debug("Удаление фильма с id={}", id);
