@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.filmGenre.FilmGenreStorage;
-import ru.yandex.practicum.filmorate.storage.filmLikes.FilmLikesStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpaRating.MpaStorage;
 
@@ -39,7 +38,6 @@ public class FilmService {
             @Qualifier("mpaDbStorage") MpaStorage mpaStorage,
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
-            @Qualifier("filmLikesDbStorage") FilmLikesStorage filmLikesStorage,
             @Qualifier("userService") UserService userService,
             @Qualifier("mpaService") MpaService mpaService,
             @Qualifier("genreService") GenreService genreService,
