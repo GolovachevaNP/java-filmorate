@@ -1,77 +1,72 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
-@Slf4j
-public class InMemoryUserStorage {
+@Repository("inMemoryUserStorage")
+public class InMemoryUserStorage implements UserStorage {
 
-    private final Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new LinkedHashMap<>();
+    private final Map<Long, Map<Long, FriendshipStatus>> friendships = new HashMap<>();
+    private long nextId = 1;
 
+    @Override
     public User create(User user) {
-        user.setId(getNextId());
+        user.setId(nextId++);
         users.put(user.getId(), user);
-        log.info("Создание пользователя с id={}", user.getId());
         return user;
     }
 
-    public User update(User user) {
-        if (!users.containsKey(user.getId())) {
-            log.warn("Пользователь не найден: id={}", user.getId());
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
-
-        users.put(user.getId(), user);
-        log.info("Обновление пользователя с id={}", user.getId());
-        return user;
+    @Override
+    public void update(String userEmail, String userLogin, String userName, Date userBirthday, Long userId) {
+        User user = users.get(userId);
+        user.setEmail(userEmail);
+        user.setLogin(userLogin);
+        user.setName(userName);
+        user.setBirthday(userBirthday == null ? null : userBirthday.toLocalDate());
     }
 
+    @Override
     public Collection<User> findAll() {
-        Collection<User> usersList = users.values();
-        log.debug("Запрос на получение всех пользователей");
-        return usersList;
+        return users.values();
     }
 
-    public User findById(Long id) {
-        User user = users.get(id);
-        if (user == null) {
-            log.warn("Пользователь с id={} не найден", id);
-            throw new NotFoundException("Пользователь с id = " + id + " не найден");
-        }
-        return user;
+    @Override
+    public Optional<User> findById(Long id) {
+        return Optional.ofNullable(users.get(id));
     }
 
+    @Override
     public void delete(Long id) {
-        log.debug("Удаление пользователя с id={}", id);
         users.remove(id);
+        friendships.remove(id);
+        friendships.values().forEach(friends -> friends.remove(id));
     }
 
+    @Override
     public void addFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        findById(friendId);
-
-        user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+        friendships.computeIfAbsent(userId, id -> new HashMap<>())
+                .put(friendId, FriendshipStatus.UNCONFIRMED);
     }
 
+    @Override
     public void deleteFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        findById(friendId);
-
-        user.getFriends().remove(friendId);
+        Map<Long, FriendshipStatus> friends = friendships.get(userId);
+        if (friends != null) {
+            friends.remove(friendId);
+        }
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(Long::longValue)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @Override
+    public Map<Long, FriendshipStatus> findFriends(User user) {
+        return new HashMap<>(friendships.getOrDefault(user.getId(), Map.of()));
     }
 }
