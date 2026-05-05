@@ -5,11 +5,7 @@ import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
@@ -28,6 +24,11 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void update(String userEmail, String userLogin, String userName, Date userBirthday, Long userId) {
         User user = users.get(userId);
+
+        if (user == null) {
+            return;
+        }
+
         user.setEmail(userEmail);
         user.setLogin(userLogin);
         user.setName(userName);
@@ -53,8 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addFriend(Long userId, Long friendId) {
-        friendships.computeIfAbsent(userId, id -> new HashMap<>())
-                .put(friendId, FriendshipStatus.UNCONFIRMED);
+        friendships.computeIfAbsent(userId, id -> new HashMap<>()).put(friendId, FriendshipStatus.UNCONFIRMED);
     }
 
     @Override
