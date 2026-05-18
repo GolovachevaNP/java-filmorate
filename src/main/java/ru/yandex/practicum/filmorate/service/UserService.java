@@ -22,7 +22,7 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    // проверка выполнения необходимых условий
+    // валидация данных пользователя
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("Ошибка валидации: не указана электронная почта");
@@ -41,14 +41,14 @@ public class UserService {
             throw new ConditionsNotMetException("Дата рождения не может быть в будущем");
         }
 
-        // имя для отображения может быть пустым — в таком случае будет использован логин
+        // если имя не указано, используется логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
     }
 
-    // создание пользователя
-    // INSERT_QUERY
+    /* INSERT_QUERY
+    создание пользователя, валидация данных */
     public User create(User user) {
         validateUser(user);
         User createdUser = userStorage.create(user);
@@ -58,8 +58,10 @@ public class UserService {
         return createdUser;
     }
 
-    // обновление пользователя
-    // UPDATE_QUERY
+    /* UPDATE_QUERY
+    обновление пользователя
+    проверка id и валидация данных
+    обновление основных полей */
     public User update(User updatedUser) {
         if (updatedUser.getId() == null) {
             throw new NotFoundException("Id пользователя должен быть указан");
@@ -75,16 +77,16 @@ public class UserService {
         return updatedUser;
     }
 
-    // получение списка всех пользователей
-    // FIND_ALL_QUERY
+    /* FIND_ALL_QUERY
+    получение списка всех пользователей */
     public Collection<User> findAll() {
         log.debug("Получение списка всех пользователей");
 
         return userStorage.findAll();
     }
 
-    // получение пользователя по id
-    // FIND_BY_ID_QUERY
+    /* FIND_BY_ID_QUERY
+    получение пользователя по id */
     public User findById(Long userId) {
         log.debug("Получение пользователя с id={}", userId);
         Optional<User> optionalUser = userStorage.findById(userId);
@@ -99,8 +101,8 @@ public class UserService {
         return user;
     }
 
-    // добавление в друзья
-    // ADD_FRIEND_QUERY
+    /* ADD_FRIEND_QUERY
+    добавление одного пользователя в друзья другому после проверки сущестования обоих */
     public void addFriend(Long userId, Long friendId) {
         findById(userId);
         findById(friendId);
@@ -115,8 +117,8 @@ public class UserService {
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
     }
 
-    // удаление из друзей
-    // DELETE_FRIEND_QUERY
+    /* DELETE_FRIEND_QUERY
+    удаление одного пользователя из списка друзей другого после проверки сущестования обоих */
     public void deleteFriend(Long userId, Long friendId) {
         findById(userId);
         findById(friendId);
@@ -126,7 +128,7 @@ public class UserService {
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
     }
 
-    // получение списка друзей
+    // получение списка друзей пользователя с информацией о них
     public Collection<User> getFriends(Long userId) {
         User user = findById(userId);
 
@@ -138,7 +140,7 @@ public class UserService {
         return friends;
     }
 
-    // получение списка общих друзей
+    // получние списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
         User user = findById(userId);
         User otherUser = findById(otherUserId);

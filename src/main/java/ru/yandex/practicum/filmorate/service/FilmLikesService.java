@@ -16,10 +16,12 @@ public class FilmLikesService {
         this.filmLikesStorage = filmLikesStorage;
     }
 
+    // подсчёт лайков фильма
     public Long countByFilmId(Long filmId) {
         return filmLikesStorage.countByFilmId(filmId);
     }
 
+    // получение списка id фильмов, отсортированных по количеству лайков
     public List<Long> findTopFilmsByLikes(int count) {
         return filmLikesStorage.findTopFilmsByLikes(count);
     }

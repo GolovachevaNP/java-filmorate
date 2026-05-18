@@ -54,7 +54,7 @@ public class FilmService {
         this.filmLikesService = filmLikesService;
     }
 
-    // проверка выполнения необходимых условий
+    // валидация данных фильма
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Ошибка валидации: не указано название фильма");
@@ -81,8 +81,10 @@ public class FilmService {
         }
     }
 
-    // добавление фильма
-    // INSERT_QUERY
+    /* INSERT_QUERY
+    создание фильма
+    валидация данных, проверка существования рейтинга MPA
+    сохранение фильма и его жанров */
     public Film create(Film film) {
         validateFilm(film);
         Integer countMpaRating = mpaStorage.count(film.getMpa().getId());
@@ -98,8 +100,10 @@ public class FilmService {
         return createdFilm;
     }
 
-    // обновление фильма
-    // UPDATE_QUERY
+    /* UPDATE_QUERY
+    обновление фильма
+    проверка id и валидация данных
+    обновление основных полей и сохранение списка жанров */
     public Film update(Film updatedFilm) {
         if (updatedFilm.getId() == null) {
             throw new NotFoundException("Id фильма должен быть указан");
@@ -117,8 +121,8 @@ public class FilmService {
         return updatedFilm;
     }
 
-    // получение всех фильмов
-    // FIND_ALL_QUERY
+    /* FIND_ALL_QUERY
+    получение всех фильмов с их данными, включая рейтинг MPA, жанры и количество лайков */
     public Collection<Film> findAll() {
         log.debug("Получение списка всех фильмов");
 
@@ -130,8 +134,8 @@ public class FilmService {
         return films;
     }
 
-    // получение фильма по id
-    // FIND_BY_ID_QUERY
+    /* FIND_BY_ID_QUERY
+    получение фильма по id */
     public Film getFilm(Long filmId) {
         log.debug("Получение фильма по id={}", filmId);
 
@@ -141,7 +145,9 @@ public class FilmService {
         return film;
     }
 
-    // добавление лайка
+    /* добавление лайка фильму
+    проверка существования фильма и пользователя
+    проверка наличия в БД строкм с парой film_id + user_id */
     public void addLike(Long filmId, Long userId) {
         getFilm(filmId);
         userService.findById(userId);
@@ -157,7 +163,8 @@ public class FilmService {
         log.info("Поставлен лайк фильму filmId={} пользователем userId={}", filmId, userId);
     }
 
-    // удаление лайка
+    /* удаление лайка фильму
+    проверка существования фильма и пользователя */
     public void deleteLike(Long filmId, Long userId) {
         getFilm(filmId);
         userService.findById(userId);
@@ -176,6 +183,9 @@ public class FilmService {
         return topFilmIds.stream().map(this::getFilm).collect(Collectors.toList());
     }
 
+    /* сохраняение связи фильма с жанрами:
+    пропуск повторяющихся жанров
+    проверка существования каждого жанра */
     private void saveGenres(Film film) {
         if (film.getGenres() == null) {
             return;
@@ -200,11 +210,14 @@ public class FilmService {
         }
     }
 
+    // дополнительные данные о фильме, которые хранятся отдельно: рейтинг MPA, жанры, лайки
     private void loadFilmDetails(Film film) {
 
         film.setMpa(mpaService.findById(film.getMpa().getId()));
+
         List<Integer> filmGenreIds = filmGenreService.findGenreIdsByFilmId(film.getId());
         film.setGenres(genreService.findGenresByIds(filmGenreIds));
+
         film.setLikeCount(filmLikesService.countByFilmId(film.getId()));
     }
 }

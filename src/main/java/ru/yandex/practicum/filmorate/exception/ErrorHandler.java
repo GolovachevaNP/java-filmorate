@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class ErrorHandler {
 
+    // обрабатывает ошибки валидации и возвращает ответ со статусом 400 (BAD_REQUEST)
     @ExceptionHandler({ValidationException.class, MethodArgumentNotValidException.class, ConditionsNotMetException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final Exception e) {
@@ -19,6 +20,7 @@ public class ErrorHandler {
         return new ErrorResponse("Ошибка валидации: " + e.getMessage());
     }
 
+    // обрабатывает ошибки поиска и возвращает ответ со статусом 404 (NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
@@ -26,6 +28,7 @@ public class ErrorHandler {
         return new ErrorResponse(e.getMessage());
     }
 
+    // обрабатывает все непредвиденные ошибки, чтобы приложение не отдавало технические детали
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {

@@ -19,14 +19,17 @@ public class GenreService {
         this.genreStorage = genreStorage;
     }
 
+    // поиск списка жанров
     public Collection<Genre> findAll() {
         return genreStorage.findAll();
     }
 
+    // поиск жанра по id
     public Genre findById(int id) {
         return genreStorage.findById(id).orElseThrow(() -> new NotFoundException("Жанр фильма с id = " + id + " не найден"));
     }
 
+    // получение списка id жанров
     public List<Genre> findGenresByIds(List<Integer> filmGenreIds) {
         return genreStorage.findGenresByIds(filmGenreIds);
     }

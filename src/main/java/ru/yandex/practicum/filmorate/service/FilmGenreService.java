@@ -18,10 +18,12 @@ public class FilmGenreService {
         this.filmGenreStorage = filmGenreStorage;
     }
 
+    // поиск связи фильма с жанром по id
     public FilmGenre findById(int id) {
         return filmGenreStorage.findById(id).orElseThrow(() -> new NotFoundException("Жанр фильма с id = " + id + " не найден"));
     }
 
+    // поиск id всех жанров, которые привязаны к конкретному фильму
     public List<Integer> findGenreIdsByFilmId(Long id) {
         return filmGenreStorage.findGenreIdsByFilmId(id);
     }

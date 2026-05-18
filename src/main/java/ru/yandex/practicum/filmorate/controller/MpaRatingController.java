@@ -17,11 +17,13 @@ public class MpaRatingController {
 
     private final MpaService mpaService;
 
+    // возвращает полный список возрастных рейтингов MPA
     @GetMapping
     public Collection<MpaRating> findAll() {
         return mpaService.findAll();
     }
 
+    // возвращает один рейтинг MPA по его идентификатору из адреса запроса
     @GetMapping("/{id}")
     public MpaRating findById(@PathVariable int id) {
         return mpaService.findById(id);

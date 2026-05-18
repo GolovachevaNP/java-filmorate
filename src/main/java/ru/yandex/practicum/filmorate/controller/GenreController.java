@@ -17,11 +17,13 @@ public class GenreController {
 
     private final GenreService genreService;
 
+    // возвращает полный список жанров, доступных в справочнике
     @GetMapping
     public Collection<Genre> findAll() {
         return genreService.findAll();
     }
 
+    // возвращает один жанр по его идентификатору из адреса запроса
     @GetMapping("/{id}")
     public Genre findById(@PathVariable int id) {
         return genreService.findById(id);

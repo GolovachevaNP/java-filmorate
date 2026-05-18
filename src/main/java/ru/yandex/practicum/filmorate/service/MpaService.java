@@ -18,10 +18,12 @@ public class MpaService {
         this.mpaStorage = mpaStorage;
     }
 
+    // поиск рейтингов MPA
     public Collection<MpaRating> findAll() {
         return mpaStorage.findAll();
     }
 
+    // поиск рейтинга MPA по id
     public MpaRating findById(int id) {
         return mpaStorage.findById(id).orElseThrow(() -> new NotFoundException("MPA-рейтинг с id = " + id + " не найден"));
     }
