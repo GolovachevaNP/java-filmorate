@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.sql.Date;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
@@ -42,4 +43,8 @@ public interface FilmStorage {
     // подсчёт лайков
     // DELETE_FILM_GENRES_QUERY
     Integer countLike(Long filmId, Long userId);
+
+    // получение общих фильмов
+    // FIND_COMMON_FILMS_QUERY
+    List<Long> getCommonFilms(Long userId, Long friendId);
 }

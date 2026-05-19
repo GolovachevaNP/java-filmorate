@@ -232,4 +232,15 @@ public class FilmService {
 
         film.setLikeCount(filmLikesService.countByFilmId(film.getId()));
     }
+
+    // получение списка общих фильмов
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        userService.findById(userId);
+        userService.findById(friendId);
+
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::getFilm).toList();
+
+        log.debug("Получение списка общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
+        return commonFilms;
+    }
 }
