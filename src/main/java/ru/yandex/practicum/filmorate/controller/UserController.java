@@ -25,6 +25,13 @@ public class UserController {
         return createdUser;
     }
 
+    //удаление пользователя
+    @DeleteMapping("/users/{userId}")
+    public void delete(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        log.info("Удалён пользователь: id = {}", userId);
+    }
+
     // обновление пользователя
     @PutMapping
     public User update(@Valid @RequestBody User user) {
