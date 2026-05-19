@@ -22,7 +22,7 @@ public class FilmLikesService {
     }
 
     // получение списка id фильмов, отсортированных по количеству лайков
-    public List<Long> findTopFilmsByLikes(int count) {
-        return filmLikesStorage.findTopFilmsByLikes(count);
+    public List<Long> findTopFilmsByLikes(int count, Integer genreId, Integer year) {
+        return filmLikesStorage.findTopFilmsByLikes(count, genreId, year);
     }
 }

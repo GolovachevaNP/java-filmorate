@@ -174,11 +174,11 @@ public class FilmService {
         log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);
     }
 
-    // вывод наиболее популярных фильмов по количеству лайков
-    public Collection<Film> getPopularFilms(int count) {
+    // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
+    public Collection<Film> getPopularFilms(int count, Integer genreId, Integer year) {
         log.debug("Формирование списка популярных фильмов");
 
-        List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count);
+        List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);
 
         return topFilmIds.stream().map(this::getFilm).collect(Collectors.toList());
     }
