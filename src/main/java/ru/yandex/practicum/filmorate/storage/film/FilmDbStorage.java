@@ -35,6 +35,17 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
         film.setId(id);
 
+        // Запись жанров в БД
+        jdbc.batchUpdate(
+                "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)",
+                film.getGenres(),
+                film.getGenres().size(),
+                (ps, genre) -> {
+                    ps.setLong(1, id);
+                    ps.setInt(2, genre.getId());
+                }
+        );
+
         return film;
     }
 
