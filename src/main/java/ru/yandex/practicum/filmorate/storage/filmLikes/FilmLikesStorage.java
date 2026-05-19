@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.filmLikes;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface FilmLikesStorage {

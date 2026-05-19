@@ -150,7 +150,7 @@ public class UserService {
         return friends;
     }
 
-    // получние списка общих друзей
+    // получение списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
         User user = findById(userId);
         User otherUser = findById(otherUserId);
