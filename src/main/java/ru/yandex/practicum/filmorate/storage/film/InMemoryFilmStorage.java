@@ -5,13 +5,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.Date;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Repository("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -88,5 +82,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         MpaRating mpa = new MpaRating();
         mpa.setId(mpaId);
         return mpa;
+    }
+
+    @Override
+    public List<Long> getCommonFilms(Long userId, Long friendId) {
+        return List.of();
     }
 }
