@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
@@ -168,6 +169,19 @@ class FilmControllerTest {
         film.setMpa(mpa);
 
         return film;
+    }
+
+    @Test
+    void shouldDeleteFilm() {
+        Film film = createValidFilm();
+        Film createdFilm = filmController.create(film);
+
+        assertDoesNotThrow(() -> filmController.delete(createdFilm.getId()));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistentFilm() {
+        assertThrows(NotFoundException.class, () -> filmController.delete(999L));
     }
 
     // Создание фильма с корректными данными
