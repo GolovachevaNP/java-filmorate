@@ -66,7 +66,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     @Override
     public void delete(Long filmId) {
-        delete(DELETE_QUERY, filmId);
+        super.delete(DELETE_QUERY, filmId);
     }
 
     @Override
