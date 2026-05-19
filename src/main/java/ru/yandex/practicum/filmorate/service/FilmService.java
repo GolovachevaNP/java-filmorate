@@ -121,6 +121,18 @@ public class FilmService {
         return updatedFilm;
     }
 
+    /* DELETE_QUERY
+    удаление фильма по Id
+    после проверки его существования
+     */
+    public void delete(Long filmId) {
+        getFilm(filmId);
+
+        filmStorage.delete(filmId);
+
+        log.info("Удалён фильм: id = {}", filmId);
+    }
+
     /* FIND_ALL_QUERY
     получение всех фильмов с их данными, включая рейтинг MPA, жанры и количество лайков */
     public Collection<Film> findAll() {

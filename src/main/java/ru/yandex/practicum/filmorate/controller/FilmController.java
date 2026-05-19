@@ -33,6 +33,13 @@ public class FilmController {
         return updatedFilm;
     }
 
+    //удаление фильма
+    @DeleteMapping("/films/{filmId}")
+    public void delete(@PathVariable Long filmId) {
+        filmService.delete(filmId);
+        log.info("Удалён фильм: id = {}", filmId);
+    }
+
     // получение всех фильмов
     @GetMapping
     public Collection<Film> findAll() {
