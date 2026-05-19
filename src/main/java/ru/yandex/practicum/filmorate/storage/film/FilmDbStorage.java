@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.storage.BaseRepository;
 
 import java.sql.Date;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository("filmDbStorage")
@@ -22,6 +23,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String ADD_LIKE_QUERY = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
     private static final String COUNT_LIKE_QUERY = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+    private static final String FIND_COMMON_FILMS_QUERY = """
+            SELECT fl1.film_id
+            FROM film_likes fl1
+            JOIN film_likes fl2 ON fl1.film_id = fl2.film_id
+            LEFT JOIN film_likes fl_all ON fl1.film_id = fl_all.film_id
+            WHERE fl1.user_id = ? AND fl2.user_id = ?
+            GROUP BY fl1.film_id
+            ORDER BY COUNT(fl_all.user_id) DESC
+            """;
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -75,5 +85,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public Integer countLike(Long filmId, Long userId) {
         return jdbc.queryForObject(COUNT_LIKE_QUERY, Integer.class, filmId, userId);
+    }
+
+    @Override
+    public List<Long> getCommonFilms(Long userId, Long friendId) {
+        return jdbc.queryForList(FIND_COMMON_FILMS_QUERY, Long.class, userId, friendId);
     }
 }
