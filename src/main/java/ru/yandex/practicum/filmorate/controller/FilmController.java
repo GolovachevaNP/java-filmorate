@@ -34,7 +34,7 @@ public class FilmController {
     }
 
     //удаление фильма
-    @DeleteMapping("/films/{filmId}")
+    @DeleteMapping("/{filmId}")
     public void delete(@PathVariable Long filmId) {
         filmService.delete(filmId);
         log.info("Удалён фильм: id = {}", filmId);
