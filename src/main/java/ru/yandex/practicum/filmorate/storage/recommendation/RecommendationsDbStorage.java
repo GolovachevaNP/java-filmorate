@@ -14,9 +14,7 @@ public class RecommendationsDbStorage implements RecommendationsStorage {
             SELECT l2.user_id
             FROM film_likes l2
             WHERE l2.user_id != ?
-                  AND l2.film_id IN (SELECT film_id 
-                                     FROM film_likes 
-                                     WHERE user_id = ?)
+                  AND l2.film_id IN (SELECT film_id FROM film_likes WHERE user_id = ?)
             GROUP BY l2.user_id
             ORDER BY COUNT(*) DESC
             """;
