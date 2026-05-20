@@ -4,10 +4,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.RecommendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -16,6 +19,7 @@ import java.util.Collection;
 public class UserController {
 
     private final UserService userService;
+    private final RecommendationService recommendationService;
 
     // создание пользователя
     @PostMapping
@@ -77,5 +81,11 @@ public class UserController {
         Collection<User> commonFriends = userService.getCommonFriends(id, otherId);
         log.info("Возвращён список общих друзей пользователей {} и {}", id, otherId);
         return commonFriends;
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable Long id) {
+        log.info("Запрос рекомендаций для пользователя id={}", id);
+        return recommendationService.getRecommendations(id);
     }
 }
