@@ -151,7 +151,8 @@ public class FilmService {
     public Film getFilm(Long filmId) {
         log.debug("Получение фильма по id={}", filmId);
 
-        Film film = filmStorage.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = filmStorage.findById(filmId).orElseThrow(() ->
+                new NotFoundException("Фильм с id = " + filmId + " не найден"));
         loadFilmDetails(film);
 
         return film;
@@ -159,7 +160,7 @@ public class FilmService {
 
     /* добавление лайка фильму
     проверка существования фильма и пользователя
-    проверка наличия в БД строкм с парой film_id + user_id */
+    проверка наличия в БД строки с парой film_id + user_id */
     public void addLike(Long filmId, Long userId) {
         getFilm(filmId);
         userService.findById(userId);
@@ -186,16 +187,16 @@ public class FilmService {
         log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);
     }
 
-    // вывод наиболее популярных фильмов по количеству лайков
-    public Collection<Film> getPopularFilms(int count) {
+    // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
+    public Collection<Film> getPopularFilms(int count, Integer genreId, Integer year) {
         log.debug("Формирование списка популярных фильмов");
 
-        List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count);
+        List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);
 
         return topFilmIds.stream().map(this::getFilm).collect(Collectors.toList());
     }
 
-    /* сохраняение связи фильма с жанрами:
+    /* сохранение связи фильма с жанрами:
     пропуск повторяющихся жанров
     проверка существования каждого жанра */
     private void saveGenres(Film film) {

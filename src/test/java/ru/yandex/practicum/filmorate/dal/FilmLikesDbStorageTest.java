@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
@@ -35,6 +36,7 @@ class FilmLikesDbStorageTest {
     private final FilmLikesDbStorage filmLikesStorage;
     private final FilmDbStorage filmStorage;
     private final UserDbStorage userStorage;
+    private final JdbcTemplate jdbcTemplate;
 
     // Проверка подсчёта лайков фильма
     @Test
@@ -54,8 +56,16 @@ class FilmLikesDbStorageTest {
     // Проверка получения популярных фильмов
     @Test
     void shouldFindTopFilmsByLikes() {
-        Film film1 = filmStorage.create(createTestFilm("Film1"));
-        Film film2 = filmStorage.create(createTestFilm("Film2"));
+        Film film1BeforeSave = createTestFilm("Film1");
+        film1BeforeSave.setReleaseDate(LocalDate.of(2000, 12, 1));
+        Film film1 = filmStorage.create(film1BeforeSave);
+
+        Film film2BeforeSave = createTestFilm("Film2");
+        film2BeforeSave.setReleaseDate(LocalDate.of(2000, 12, 15));
+        Film film2 = filmStorage.create(film2BeforeSave);
+
+        jdbcTemplate.update("MERGE INTO film_genres (film_id, genre_id) VALUES (?, 1)", film1.getId());
+        jdbcTemplate.update("MERGE INTO film_genres (film_id, genre_id) VALUES (?, 1)", film2.getId());
 
         Long user1Id = createTestUser("user1@email.ru", "user1");
         Long user2Id = createTestUser("user2@email.ru", "user2");
@@ -64,7 +74,7 @@ class FilmLikesDbStorageTest {
         filmStorage.addLike(film2.getId(), user1Id);
         filmStorage.addLike(film2.getId(), user2Id);
 
-        List<Long> topFilmIds = filmLikesStorage.findTopFilmsByLikes(10);
+        List<Long> topFilmIds = filmLikesStorage.findTopFilmsByLikes(10, 1, 2000);
 
         assertThat(topFilmIds).containsExactly(film2.getId(), film1.getId());
     }

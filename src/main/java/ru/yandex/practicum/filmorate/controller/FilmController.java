@@ -70,10 +70,13 @@ public class FilmController {
         log.info("Удалён лайк: filmId={}, userId={}", id, userId);
     }
 
-    // вывод 10 наиболее популярных фильмов по количеству лайков
+    // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        Collection<Film> films = filmService.getPopularFilms(count);
+    public Collection<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        Collection<Film> films = filmService.getPopularFilms(count, genreId, year);
         log.info("Возвращён список популярных фильмов");
         return films;
     }

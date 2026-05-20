@@ -44,7 +44,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 film.getDuration(), film.getMpa().getId());
 
         film.setId(id);
-
         return film;
     }
 
