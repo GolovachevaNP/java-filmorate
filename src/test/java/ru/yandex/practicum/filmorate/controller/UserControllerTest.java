@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -96,5 +97,18 @@ class UserControllerTest {
         user.setName("Пользователь");
         user.setBirthday(LocalDate.of(1999, 6, 25));
         return user;
+    }
+
+    @Test
+    void shouldDeleteUser() {
+        User user = createValidUser();
+        User createdUser = userController.create(user);
+
+        assertDoesNotThrow(() -> userController.delete(createdUser.getId()));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistentUser() {
+        assertThrows(NotFoundException.class, () -> userController.delete(999L));
     }
 }

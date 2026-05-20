@@ -77,6 +77,16 @@ public class UserService {
         return updatedUser;
     }
 
+    /* DELETE_QUERY
+    удаление пользователя по Id
+    после проверки его существования
+     */
+    public void deleteUser(Long userId) {
+        findById(userId);
+
+        userStorage.delete(userId);
+    }
+
     /* FIND_ALL_QUERY
     получение списка всех пользователей */
     public Collection<User> findAll() {
@@ -140,7 +150,7 @@ public class UserService {
         return friends;
     }
 
-    // получние списка общих друзей
+    // получение списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
         User user = findById(userId);
         User otherUser = findById(otherUserId);

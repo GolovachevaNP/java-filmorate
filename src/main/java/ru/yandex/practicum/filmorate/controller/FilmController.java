@@ -33,6 +33,13 @@ public class FilmController {
         return updatedFilm;
     }
 
+    //удаление фильма
+    @DeleteMapping("/{filmId}")
+    public void delete(@PathVariable Long filmId) {
+        filmService.delete(filmId);
+        log.info("Удалён фильм: id = {}", filmId);
+    }
+
     // получение всех фильмов
     @GetMapping
     public Collection<Film> findAll() {
@@ -63,11 +70,22 @@ public class FilmController {
         log.info("Удалён лайк: filmId={}, userId={}", id, userId);
     }
 
-    // вывод 10 наиболее популярных фильмов по количеству лайков
+    // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
     @GetMapping("/popular")
-    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        Collection<Film> films = filmService.getPopularFilms(count);
+    public Collection<Film> getPopularFilms(
+            @RequestParam(defaultValue = "10") int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        Collection<Film> films = filmService.getPopularFilms(count, genreId, year);
         log.info("Возвращён список популярных фильмов");
         return films;
+    }
+
+    // получение списка общих фильмов с другим пользователем
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        Collection<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        log.info("Возвращён список общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
+        return commonFilms;
     }
 }
