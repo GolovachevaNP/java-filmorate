@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.director;
 
-import jakarta.validation.constraints.NotBlank;
 import ru.yandex.practicum.filmorate.model.Director;
 
 import java.util.Collection;
