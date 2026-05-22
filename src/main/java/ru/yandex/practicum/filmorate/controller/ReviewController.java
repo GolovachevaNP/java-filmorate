@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
@@ -11,6 +14,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/reviews")
 @Slf4j
+@Validated
 @RequiredArgsConstructor
 public class ReviewController {
 
@@ -18,7 +22,7 @@ public class ReviewController {
 
     // создание отзыва
     @PostMapping
-    public Review create(@RequestBody Review review) {
+    public Review create(@Valid @RequestBody Review review) {
         Review createdReview = reviewService.create(review);
         log.info("Добавлен отзыв: id={}", createdReview.getReviewId());
         return createdReview;
@@ -26,7 +30,7 @@ public class ReviewController {
 
     // обновление отзыва
     @PutMapping
-    public Review update(@RequestBody Review review) {
+    public Review update(@Valid @RequestBody Review review) {
         Review updatedReview = reviewService.update(review);
         log.info("Обновлён отзыв: id={}", updatedReview.getReviewId());
         return updatedReview;
@@ -50,6 +54,7 @@ public class ReviewController {
     // получение списка отзывов по идентификатору фильма или всех отзывов
     @GetMapping
     public Collection<Review> findAll(@RequestParam(required = false) Long filmId,
+                                      @Positive(message = "Количество отзывов должно быть положительным")
                                       @RequestParam(defaultValue = "10") int count) {
         Collection<Review> reviews = reviewService.findAll(filmId, count);
         log.info("Возвращён список отзывов: filmId={}, count={}", filmId, count);

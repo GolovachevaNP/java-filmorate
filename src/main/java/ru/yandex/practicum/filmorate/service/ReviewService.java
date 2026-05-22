@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
@@ -26,35 +25,8 @@ public class ReviewService {
         this.filmService = filmService;
     }
 
-    // валидация данных отзыва
-    private void validateReview(Review review) {
-        validateReviewContent(review);
-
-        if (review.getUserId() == null) {
-            log.warn("Ошибка валидации: не указан пользователь отзыва");
-            throw new ConditionsNotMetException("Пользователь должен быть указан");
-        }
-        if (review.getFilmId() == null) {
-            log.warn("Ошибка валидации: не указан фильм отзыва");
-            throw new ConditionsNotMetException("Фильм должен быть указан");
-        }
-    }
-
-    // валидация текста и типа отзыва
-    private void validateReviewContent(Review review) {
-        if (review.getContent() == null || review.getContent().isBlank()) {
-            log.warn("Ошибка валидации: не указан текст отзыва");
-            throw new ConditionsNotMetException("Текст отзыва не может быть пустым");
-        }
-        if (review.getIsPositive() == null) {
-            log.warn("Ошибка валидации: не указан тип отзыва");
-            throw new ConditionsNotMetException("Тип отзыва должен быть указан");
-        }
-    }
-
     // создание отзыва
     public Review create(Review review) {
-        validateReview(review);
         userService.findById(review.getUserId());
         filmService.getFilm(review.getFilmId());
 
@@ -73,7 +45,6 @@ public class ReviewService {
             throw new NotFoundException("Id отзыва должен быть указан");
         }
 
-        validateReviewContent(updatedReview);
         findById(updatedReview.getReviewId());
 
         reviewStorage.update(updatedReview.getContent(), updatedReview.getIsPositive(), updatedReview.getReviewId());
@@ -105,9 +76,6 @@ public class ReviewService {
     public Collection<Review> findAll(Long filmId, int count) {
         if (filmId != null) {
             filmService.getFilm(filmId);
-        }
-        if (count <= 0) {
-            throw new ConditionsNotMetException("Количество отзывов должно быть положительным");
         }
 
         Collection<Review> reviews = reviewStorage.findAll(filmId, count);
