@@ -122,9 +122,8 @@ public class FilmService {
     }
 
     /* DELETE_QUERY
-    удаление фильма по Id
-    после проверки его существования
-     */
+    удаление фильма по id
+    после проверки его существования */
     public void delete(Long filmId) {
         getFilm(filmId);
 

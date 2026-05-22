@@ -14,15 +14,55 @@ import java.util.Optional;
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
-    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ? WHERE film_id = ? ";
-    private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM films ORDER BY film_id";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
-    private static final String DELETE_QUERY = "DELETE FROM films WHERE film_id = ?";
-    private static final String ADD_LIKE_QUERY = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
-    private static final String COUNT_LIKE_QUERY = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
-    private static final String DELETE_LIKE_QUERY = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+    private static final String INSERT_QUERY = """
+            INSERT INTO films(name, description, release_date, duration, mpa_rating_id)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+    private static final String UPDATE_QUERY = """
+            UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ?
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_FILM_GENRES_QUERY = """
+            DELETE FROM film_genres
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_FILM_DIRECTORS_QUERY = """
+            DELETE FROM film_directors
+            WHERE film_id = ?""";
+
+    private static final String FIND_ALL_QUERY = """
+            SELECT * FROM films
+            ORDER BY film_id
+            """;
+
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT * FROM films
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_QUERY = """
+            DELETE FROM films
+            WHERE film_id = ?
+            """;
+
+    private static final String ADD_LIKE_QUERY = """
+            INSERT INTO film_likes (film_id, user_id)
+            VALUES (?, ?)
+            """;
+
+    private static final String COUNT_LIKE_QUERY = """
+            SELECT COUNT(*) FROM film_likes
+            WHERE film_id = ? AND user_id = ?
+            """;
+
+    private static final String DELETE_LIKE_QUERY = """
+            DELETE FROM film_likes
+            WHERE film_id = ? AND user_id = ?
+            """;
+
     private static final String FIND_COMMON_FILMS_QUERY = """
             SELECT fl1.film_id
             FROM film_likes fl1

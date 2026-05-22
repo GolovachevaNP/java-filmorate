@@ -14,7 +14,14 @@ public interface FilmStorage {
 
     // обновление фильма
     // UPDATE_QUERY
-    void update(String filmName, String filmDescription, Date filmReleaseDate, int filmDuration, Integer mpaId, Long filmId);
+    void update(
+            String filmName,
+            String filmDescription,
+            Date filmReleaseDate,
+            int filmDuration,
+            Integer mpaId,
+            Long filmId
+    );
 
     // получение всех фильмов
     // FIND_ALL_QUERY
