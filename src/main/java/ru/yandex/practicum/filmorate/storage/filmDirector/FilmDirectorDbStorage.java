@@ -12,7 +12,7 @@ import java.util.Set;
 @Repository("filmDirectorDbStorage")
 public class FilmDirectorDbStorage extends BaseRepository<FilmDirector> implements FilmDirectorStorage {
 
-    private final static String INSERT_FILM_DIRECTOR_QUERY = """
+    private static final String INSERT_FILM_DIRECTOR_QUERY = """
             INSERT INTO film_directors(film_id, director_id)
             VALUES (?, ?)
             """;
