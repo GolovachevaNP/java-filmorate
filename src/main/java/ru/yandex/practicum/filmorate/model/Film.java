@@ -29,4 +29,5 @@ public class Film {
     private MpaRating mpa; // возрастной рейтинг
     private List<Genre> genres = new ArrayList<>(); // жанры фильма
     private Long likeCount; // количество лайков фильма
+    private List<Director> directors = new ArrayList<>(); // режиссёры фильма
 }

@@ -73,6 +73,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             ORDER BY COUNT(fl_all.user_id) DESC
             """;
 
+    private static final String FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY = """
+            SELECT f.*
+            FROM films f
+            JOIN film_directors fd ON f.film_id = fd.film_id
+            WHERE fd.director_id = ?
+            ORDER BY f.release_date
+            """;
+
+    private static final String FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY = """
+            SELECT f.*, COUNT(fl.user_id) AS likes_count
+            FROM films f
+            JOIN film_directors fd ON f.film_id = fd.film_id
+            LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+            WHERE fd.director_id = ?
+            GROUP BY f.film_id
+            ORDER BY likes_count DESC
+            """;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -123,6 +140,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     @Override
+    public void deleteDirectors(Long filmId) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, filmId);
+    }
+
+    @Override
     public Integer countLike(Long filmId, Long userId) {
         return jdbc.queryForObject(COUNT_LIKE_QUERY, Integer.class, filmId, userId);
     }
@@ -130,5 +152,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public List<Long> getCommonFilms(Long userId, Long friendId) {
         return jdbc.queryForList(FIND_COMMON_FILMS_QUERY, Long.class, userId, friendId);
+    }
+
+    @Override
+    public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
+        String sqlQuery = sortByYear ? FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY : FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY;
+        return findMany(sqlQuery, directorId);
     }
 }
