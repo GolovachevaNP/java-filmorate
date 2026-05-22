@@ -45,9 +45,9 @@ public class DirectorDbStorage extends BaseRepository<Director> implements Direc
             WHERE director_id IN (%s)
     """;
 
-    private static final String COUNT_DIRECTOR_BY_ID_QUERY = """
+    private static final String COUNT_DIRECTORS_BY_IDS_QUERY = """
             SELECT COUNT(*) FROM directors
-            WHERE director_id = ?
+            WHERE director_id IN (%s)
             """;
 
     public DirectorDbStorage(JdbcTemplate jdbc, RowMapper<Director> mapper) {
@@ -90,19 +90,19 @@ public class DirectorDbStorage extends BaseRepository<Director> implements Direc
         return jdbc.query(String.format(FIND_DIRECTORS_BY_IDS_QUERY, idsAsString), mapper);
     }
 
-    // Проверка директора в базе по id
+    // Проверка режиссёра в базе по id
     @Override
     public int count(Set<Integer> directorIds) {
-        int totalCount = 0;
-
-        for (Integer directorId : directorIds) {
-            Integer count = jdbc.queryForObject(COUNT_DIRECTOR_BY_ID_QUERY, Integer.class, directorId);
-
-            if (count != null && count > 0) {
-                totalCount++;
-            }
+        if (directorIds == null || directorIds.isEmpty()) {
+            return 0;
         }
 
-        return totalCount;
+        String placeholders = String.join(",", java.util.Collections.nCopies(directorIds.size(), "?"));
+
+        String sqlQuery = String.format(COUNT_DIRECTORS_BY_IDS_QUERY, placeholders);
+
+        Integer count = jdbc.queryForObject(sqlQuery, Integer.class, directorIds.toArray());
+
+        return count != null ? count : 0;
     }
 }
