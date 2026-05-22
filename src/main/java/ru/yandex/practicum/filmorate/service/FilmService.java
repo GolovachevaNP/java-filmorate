@@ -198,6 +198,10 @@ public class FilmService {
 
     // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
     public Collection<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        if (count <= 0) {
+            throw new ConditionsNotMetException("Количество фильмов должно быть положительным");
+        }
+
         log.debug("Формирование списка популярных фильмов");
 
         List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);

@@ -25,7 +25,7 @@ public class EventDbStorage implements EventStorage {
             SELECT event_id, user_id, entity_id, event_type, operation, timestamp
             FROM events
             WHERE user_id = ?
-            ORDER BY timestamp DESC
+            ORDER BY timestamp ASC
             """;
 
     @Override
