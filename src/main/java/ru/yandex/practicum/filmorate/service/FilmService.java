@@ -296,7 +296,7 @@ public class FilmService {
 
     // извлечение списка id режиссёров
     private Set<Integer> extractDirectorIds(Collection<Director> directors) {
-        if (directors.isEmpty()) {
+        if (directors == null || directors.isEmpty()) {
             return Collections.emptySet();
         }
         return directors.stream()
