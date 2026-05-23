@@ -30,22 +30,13 @@ public class EventService {
         return eventStorage.getUserFeed(userId);
     }
 
-    public void addEvent(Event event) {
-        eventStorage.addEvent(event);
-    }
-
     public void createEvent(Long userId, Long entityId, EventType type, EventOperation operation) {
-        Event event = createEventInternal(userId, entityId, type, operation);
-        addEvent(event);
-    }
-
-    private Event createEventInternal(Long userId, Long entityId, EventType type, EventOperation operation) {
         Event event = new Event();
         event.setUserId(userId);
         event.setEntityId(entityId);
         event.setEventType(type);
         event.setOperation(operation);
         event.setTimestamp(System.currentTimeMillis());
-        return event;
+        eventStorage.addEvent(event);
     }
 }
