@@ -34,7 +34,7 @@ public class EventService {
         eventStorage.addEvent(event);
     }
 
-    public void createEvent (Long userId, Long entityId, EventType type, EventOperation operation) {
+    public void createEvent(Long userId, Long entityId, EventType type, EventOperation operation) {
         Event event = createEventInternal(userId, entityId, type, operation);
         addEvent(event);
     }
