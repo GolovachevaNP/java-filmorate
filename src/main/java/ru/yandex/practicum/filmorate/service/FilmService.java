@@ -5,21 +5,21 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.EventOperation;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.filmDirector.FilmDirectorStorage;
 import ru.yandex.practicum.filmorate.storage.filmGenre.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpaRating.MpaStorage;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,11 +29,15 @@ public class FilmService {
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final FilmGenreStorage filmGenreStorage;
+    private final DirectorStorage directorStorage;
+    private final FilmDirectorStorage filmDirectorStorage;
     private final UserService userService;
     private final MpaService mpaService;
     private final GenreService genreService;
+    private final DirectorService directorService;
     private final FilmGenreService filmGenreService;
     private final FilmLikesService filmLikesService;
+    private final FilmDirectorService filmDirectorService;
     private final EventService eventService;
 
     public FilmService(
@@ -41,21 +45,29 @@ public class FilmService {
             @Qualifier("mpaDbStorage") MpaStorage mpaStorage,
             @Qualifier("genreDbStorage") GenreStorage genreStorage,
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
+            @Qualifier("directorDbStorage") DirectorStorage directorStorage,
+            @Qualifier("filmDirectorDbStorage") FilmDirectorStorage filmDirectorStorage,
             @Qualifier("userService") UserService userService,
             @Qualifier("mpaService") MpaService mpaService,
             @Qualifier("genreService") GenreService genreService,
+            @Qualifier("directorService") DirectorService directorService,
             @Qualifier("filmGenreService") FilmGenreService filmGenreService,
             @Qualifier("filmLikesService") FilmLikesService filmLikesService,
+            @Qualifier("filmDirectorService") FilmDirectorService filmDirectorService,
             @Qualifier("eventService") EventService eventService) {
         this.filmStorage = filmStorage;
         this.mpaStorage = mpaStorage;
         this.genreStorage = genreStorage;
         this.filmGenreStorage = filmGenreStorage;
+        this.directorStorage = directorStorage;
+        this.filmDirectorStorage = filmDirectorStorage;
         this.userService = userService;
         this.mpaService = mpaService;
         this.genreService = genreService;
+        this.directorService = directorService;
         this.filmGenreService = filmGenreService;
         this.filmLikesService = filmLikesService;
+        this.filmDirectorService = filmDirectorService;
         this.eventService = eventService;
     }
 
@@ -89,26 +101,33 @@ public class FilmService {
     /* INSERT_QUERY
     создание фильма
     валидация данных, проверка существования рейтинга MPA
-    сохранение фильма и его жанров */
+    сохранение фильма и его: жанров, режиссеров */
     public Film create(Film film) {
         validateFilm(film);
+
         Integer countMpaRating = mpaStorage.count(film.getMpa().getId());
         if (countMpaRating == null || countMpaRating == 0) {
             throw new NotFoundException("MPA не найден");
         }
 
+        Set<Integer> directorsIds = extractDirectorIds(film.getDirectors());
+        if (!directorsIds.isEmpty()) {
+            validateDirectors(directorsIds);
+        }
+
         Film createdFilm = filmStorage.create(film);
         saveGenres(film);
+        saveDirectors(createdFilm.getId(), directorsIds);
 
         log.debug("Добавление фильма: id={}", createdFilm.getId());
 
-        return createdFilm;
+        return getFilm(createdFilm.getId());
     }
 
     /* UPDATE_QUERY
     обновление фильма
     проверка id и валидация данных
-    обновление основных полей и сохранение списка жанров */
+    обновление основных полей и сохранение списка: жанров, режиссёров */
     public Film update(Film updatedFilm) {
         if (updatedFilm.getId() == null) {
             throw new NotFoundException("Id фильма должен быть указан");
@@ -118,18 +137,25 @@ public class FilmService {
 
         filmStorage.update(updatedFilm.getName(), updatedFilm.getDescription(), Date.valueOf(updatedFilm.getReleaseDate()),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId());
+
         filmStorage.deleteGenres(updatedFilm.getId());
         saveGenres(updatedFilm);
 
+        Set<Integer> directorsIds = extractDirectorIds(updatedFilm.getDirectors());
+        if (!directorsIds.isEmpty()) {
+            validateDirectors(directorsIds);
+        }
+        filmStorage.deleteDirectors(updatedFilm.getId());
+        saveDirectors(updatedFilm.getId(), directorsIds);
+
         log.debug("Обновление фильма: id={}", updatedFilm.getId());
 
-        return updatedFilm;
+        return getFilm(updatedFilm.getId());
     }
 
     /* DELETE_QUERY
-    удаление фильма по Id
-    после проверки его существования
-     */
+    удаление фильма по id
+    после проверки его существования */
     public void delete(Long filmId) {
         getFilm(filmId);
 
@@ -139,7 +165,8 @@ public class FilmService {
     }
 
     /* FIND_ALL_QUERY
-    получение всех фильмов с их данными, включая рейтинг MPA, жанры и количество лайков */
+    получение всех фильмов с их данными, включая:
+    рейтинг MPA, жанры, количество лайков, режиссёры */
     public Collection<Film> findAll() {
         log.debug("Получение списка всех фильмов");
 
@@ -236,15 +263,17 @@ public class FilmService {
         }
     }
 
-    // дополнительные данные о фильме, которые хранятся отдельно: рейтинг MPA, жанры, лайки
+    // дополнительные данные о фильме, которые хранятся отдельно: рейтинг MPA, жанры, лайки, режиссёры
     private void loadFilmDetails(Film film) {
-
         film.setMpa(mpaService.findById(film.getMpa().getId()));
 
         List<Integer> filmGenreIds = filmGenreService.findGenreIdsByFilmId(film.getId());
         film.setGenres(genreService.findGenresByIds(filmGenreIds));
 
         film.setLikeCount(filmLikesService.countByFilmId(film.getId()));
+
+        List<Integer> filmDirectorIds = filmDirectorService.findDirectorIdsByFilmId(film.getId());
+        film.setDirectors(directorService.findDirectorsByIds(filmDirectorIds));
     }
 
     // получение списка общих фильмов
@@ -256,5 +285,51 @@ public class FilmService {
 
         log.debug("Получение списка общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
         return commonFilms;
+    }
+
+    // получение списка фильмов режиссёра отсортированных по количеству лайков или году выпуска
+    public Collection<Film> getFilmsByDirector(Integer directorId, String sortBy) {
+        validateDirectors(Set.of(directorId));
+
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new ConditionsNotMetException("Неподдерживаемый тип сортировки: " + sortBy);
+        }
+
+        boolean sortByYear = sortBy.equals("year");
+        boolean sortByLikes = sortBy.equals("likes");
+
+        Collection<Film> films = filmStorage.findAllByDirector(directorId, sortByYear, sortByLikes);
+
+        for (Film film : films) {
+            loadFilmDetails(film);
+        }
+
+        return films;
+    }
+
+    // извлечение списка id режиссёров
+    private Set<Integer> extractDirectorIds(Collection<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return directors.stream()
+                .map(Director::getId)
+                .collect(Collectors.toSet());
+    }
+
+    // сохранение связи фильма и режиссёров
+    private void saveDirectors(Long filmId, Set<Integer> directorIds) {
+        if (directorIds.isEmpty()) {
+            return;
+        }
+        filmDirectorStorage.addFilmDirectorsLink(filmId, directorIds);
+    }
+
+    // валидация режиссёров
+    private void validateDirectors(Set<Integer> directorIds) {
+        int countDirectors = directorStorage.count(directorIds);
+        if (countDirectors != directorIds.size()) {
+            throw new NotFoundException("Один или несколько режиссёров не найдены");
+        }
     }
 }

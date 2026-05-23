@@ -88,4 +88,12 @@ public class FilmController {
         log.info("Возвращён список общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
         return commonFilms;
     }
+
+    // получение списка фильмов режиссёра отсортированных по количеству лайков или году выпуска
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable Integer directorId, @RequestParam String sortBy) {
+        Collection<Film> films = filmService.getFilmsByDirector(directorId, sortBy.toLowerCase());
+        log.info("Возвращён список режиссёров");
+        return films;
+    }
 }

@@ -12,11 +12,25 @@ import java.util.Optional;
 @Repository
 public class FilmGenreDbStorage extends BaseRepository<FilmGenre> implements FilmGenreStorage {
 
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = ?";
-    private static final String COUNT_GENRE_BY_ID_QUERY = "SELECT COUNT(*) FROM genres WHERE genre_id = ?";
-    private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO film_genres(film_id, genre_id) VALUES (?, ?)";
-    private static final String FIND_GENRE_IDS_BY_FILM_ID_QUERY = "SELECT genre_id FROM film_genres WHERE film_id = ? " +
-            "ORDER BY genre_id";
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT * FROM genres
+            WHERE genre_id = ?
+            """;
+
+    private static final String COUNT_GENRE_BY_ID_QUERY = """
+            SELECT COUNT(*) FROM genres
+            WHERE genre_id = ?""";
+
+    private static final String INSERT_FILM_GENRE_QUERY = """
+            INSERT INTO film_genres(film_id, genre_id)
+            VALUES (?, ?)
+            """;
+
+    private static final String FIND_GENRE_IDS_BY_FILM_ID_QUERY = """
+            SELECT genre_id FROM film_genres
+            WHERE film_id = ?
+            ORDER BY genre_id
+            """;
 
     public FilmGenreDbStorage(JdbcTemplate jdbc, RowMapper<FilmGenre> mapper) {
         super(jdbc, mapper);

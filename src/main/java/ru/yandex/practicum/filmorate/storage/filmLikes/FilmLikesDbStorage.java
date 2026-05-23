@@ -10,7 +10,10 @@ public class FilmLikesDbStorage implements FilmLikesStorage {
 
     private final JdbcTemplate jdbc;
 
-    private static final String COUNT_FILM_LIKES_QUERY = "SELECT COUNT(*) FROM film_likes WHERE film_id = ?";
+    private static final String COUNT_FILM_LIKES_QUERY = """
+            SELECT COUNT(*) FROM film_likes WHERE film_id = ?
+            """;
+
     private static final String FIND_TOP_FILMS_BY_LIKES_QUERY = """
             SELECT f.film_id
             FROM films AS f
