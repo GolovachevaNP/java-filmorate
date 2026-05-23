@@ -116,7 +116,7 @@ public class FilmService {
 
         log.debug("Добавление фильма: id={}", createdFilm.getId());
 
-        return createdFilm;
+        return getFilm(createdFilm.getId());
     }
 
     /* UPDATE_QUERY
@@ -145,7 +145,7 @@ public class FilmService {
 
         log.debug("Обновление фильма: id={}", updatedFilm.getId());
 
-        return updatedFilm;
+        return getFilm(updatedFilm.getId());
     }
 
     /* DELETE_QUERY
