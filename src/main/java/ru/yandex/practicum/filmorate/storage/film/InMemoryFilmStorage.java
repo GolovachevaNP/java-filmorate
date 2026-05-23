@@ -88,4 +88,39 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Long> getCommonFilms(Long userId, Long friendId) {
         return List.of();
     }
+
+    @Override
+    public void deleteDirectors(Long filmId) {
+        Film film = films.get(filmId);
+        if (film != null && film.getDirectors() != null) {
+            film.getDirectors().clear();
+        }
+    }
+
+    @Override
+    public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
+        List<Film> directorFilms = new ArrayList<>();
+
+        for (Film film : films.values()) {
+            if (film.getDirectors() != null) {
+                boolean hasDirector = film.getDirectors().stream()
+                        .anyMatch(d -> d.getId().equals(directorId));
+                if (hasDirector) {
+                    directorFilms.add(film);
+                }
+            }
+        }
+
+        if (sortByYear) {
+            directorFilms.sort(Comparator.comparing(Film::getReleaseDate, Comparator.nullsLast(Comparator.naturalOrder())));
+        } else if (sortByLikes) {
+            directorFilms.sort((f1, f2) -> {
+                int likes1 = likes.getOrDefault(f1.getId(), Set.of()).size();
+                int likes2 = likes.getOrDefault(f2.getId(), Set.of()).size();
+                return Integer.compare(likes2, likes1);
+            });
+        }
+
+        return directorFilms;
+    }
 }

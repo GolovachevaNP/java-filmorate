@@ -14,18 +14,18 @@ public class RecommendationsDbStorage implements RecommendationsStorage {
             SELECT l2.user_id
             FROM film_likes l2
             WHERE l2.user_id != ?
-                  AND l2.film_id IN (SELECT film_id FROM film_likes WHERE user_id = ?)
+                AND l2.film_id IN (SELECT film_id FROM film_likes WHERE user_id = ?)
             GROUP BY l2.user_id
             ORDER BY COUNT(*) DESC
             """;
 
     private static final String GET_RECOMMENDATIONS_QUERY = """
-        SELECT DISTINCT l.film_id
-        FROM film_likes l
-        WHERE l.user_id = ?
-          AND l.film_id NOT IN (SELECT film_id FROM film_likes WHERE user_id = ?)
-        ORDER BY l.film_id
-        """;
+            SELECT DISTINCT l.film_id
+            FROM film_likes l
+            WHERE l.user_id = ?
+                AND l.film_id NOT IN (SELECT film_id FROM film_likes WHERE user_id = ?)
+            ORDER BY l.film_id
+            """;
 
     public RecommendationsDbStorage(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
