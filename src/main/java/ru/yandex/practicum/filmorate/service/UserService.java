@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.EventOperation;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -17,9 +19,12 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
+                       @Qualifier("eventService") EventService eventService) {
         this.userStorage = userStorage;
+        this.eventService = eventService;
     }
 
     // валидация данных пользователя
@@ -125,6 +130,8 @@ public class UserService {
         userStorage.addFriend(userId, friendId);
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
+
+        eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.ADD);
     }
 
     /* DELETE_FRIEND_QUERY
@@ -133,9 +140,16 @@ public class UserService {
         findById(userId);
         findById(friendId);
 
+        if (!findById(userId).getFriends().containsKey(friendId)) {
+            log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
+            return;
+        }
+
         userStorage.deleteFriend(userId, friendId);
 
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
+
+        eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.REMOVE);
     }
 
     // получение списка друзей пользователя с информацией о них

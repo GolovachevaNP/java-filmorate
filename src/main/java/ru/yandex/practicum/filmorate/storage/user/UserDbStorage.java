@@ -16,19 +16,47 @@ import java.util.Optional;
 @Repository("userDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
-    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ? ";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM users ORDER BY user_id";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
-    private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
+    private static final String INSERT_QUERY = """
+            INSERT INTO users(email, login, name, birthday)
+            VALUES (?, ?, ?, ?)
+            """;
+
+    private static final String UPDATE_QUERY = """
+            UPDATE users SET email = ?, login = ?, name = ?, birthday = ?
+            WHERE user_id = ?
+            """;
+
+    private static final String FIND_ALL_QUERY = """
+            SELECT * FROM users
+            ORDER BY user_id
+            """;
+
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT * FROM users
+            WHERE user_id = ?
+            """;
+
+    private static final String DELETE_QUERY = """
+            DELETE FROM users
+            WHERE user_id = ?
+            """;
+
     private static final String FIND_FRIENDS_QUERY = """
             SELECT f.friend_id, fs.name AS status_name
             FROM friendships f
             JOIN friendship_statuses fs ON f.status_id = fs.id
             WHERE f.user_id = ?
             """;
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendships (user_id, friend_id, status_id) VALUES (?, ?, ?)";
-    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
+
+    private static final String ADD_FRIEND_QUERY = """
+            INSERT INTO friendships (user_id, friend_id, status_id)
+            VALUES (?, ?, ?)
+            """;
+
+    private static final String DELETE_FRIEND_QUERY = """
+            DELETE FROM friendships
+            WHERE user_id = ? AND friend_id = ?
+            """;
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);

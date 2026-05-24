@@ -12,15 +12,55 @@ import java.util.*;
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
-    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ? WHERE film_id = ? ";
-    private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM films ORDER BY film_id";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
-    private static final String DELETE_QUERY = "DELETE FROM films WHERE film_id = ?";
-    private static final String ADD_LIKE_QUERY = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
-    private static final String COUNT_LIKE_QUERY = "SELECT COUNT(*) FROM film_likes WHERE film_id = ? AND user_id = ?";
-    private static final String DELETE_LIKE_QUERY = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+    private static final String INSERT_QUERY = """
+            INSERT INTO films(name, description, release_date, duration, mpa_rating_id)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+    private static final String UPDATE_QUERY = """
+            UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ?
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_FILM_GENRES_QUERY = """
+            DELETE FROM film_genres
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_FILM_DIRECTORS_QUERY = """
+            DELETE FROM film_directors
+            WHERE film_id = ?""";
+
+    private static final String FIND_ALL_QUERY = """
+            SELECT * FROM films
+            ORDER BY film_id
+            """;
+
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT * FROM films
+            WHERE film_id = ?
+            """;
+
+    private static final String DELETE_QUERY = """
+            DELETE FROM films
+            WHERE film_id = ?
+            """;
+
+    private static final String ADD_LIKE_QUERY = """
+            INSERT INTO film_likes (film_id, user_id)
+            VALUES (?, ?)
+            """;
+
+    private static final String COUNT_LIKE_QUERY = """
+            SELECT COUNT(*) FROM film_likes
+            WHERE film_id = ? AND user_id = ?
+            """;
+
+    private static final String DELETE_LIKE_QUERY = """
+            DELETE FROM film_likes
+            WHERE film_id = ? AND user_id = ?
+            """;
+
     private static final String FIND_COMMON_FILMS_QUERY = """
             SELECT fl1.film_id
             FROM film_likes fl1
@@ -54,6 +94,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     "OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
                     "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
 
+    private static final String FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY = """
+            SELECT f.*
+            FROM films f
+            JOIN film_directors fd ON f.film_id = fd.film_id
+            WHERE fd.director_id = ?
+            ORDER BY f.release_date
+            """;
+
+    private static final String FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY = """
+            SELECT f.*, COUNT(fl.user_id) AS likes_count
+            FROM films f
+            JOIN film_directors fd ON f.film_id = fd.film_id
+            LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+            WHERE fd.director_id = ?
+            GROUP BY f.film_id
+            ORDER BY likes_count DESC
+            """;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -121,6 +178,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     @Override
+    public void deleteDirectors(Long filmId) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, filmId);
+    }
+
+    @Override
     public Integer countLike(Long filmId, Long userId) {
         return jdbc.queryForObject(COUNT_LIKE_QUERY, Integer.class, filmId, userId);
     }
@@ -128,5 +190,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public List<Long> getCommonFilms(Long userId, Long friendId) {
         return jdbc.queryForList(FIND_COMMON_FILMS_QUERY, Long.class, userId, friendId);
+    }
+
+    @Override
+    public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
+        String sqlQuery = sortByYear ? FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY : FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY;
+        return findMany(sqlQuery, directorId);
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
@@ -16,10 +17,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -233,10 +231,24 @@ class FilmDbStorageTest {
         assertThat(resultList.get(0).getId()).isEqualTo(created2.getId());
     }
 
-    // Поиск по режиссёру
     @Test
     void shouldSearchFilmByDirector() {
-         Collection<Film> result = filmStorage.searchFilm("реж", "director");
-         assertThat(result).isNotEmpty();
+        // создаём режиссёра
+        Director director = new Director();
+        director.setName("Режиссёр Тестовый");
+        Director createdDirector = directorStorage.create(director);
+
+        // создаём фильм
+        Film film = createTestFilm();
+        film.setName("Тестовый фильм");
+        Film createdFilm = filmStorage.create(film);
+
+        // привязываем режиссёра к фильму
+        filmDirectorStorage.addFilmDirectorsLink(createdFilm.getId(), Set.of(createdDirector.getId()));
+
+        // ищем по подстроке имени режиссёра
+        Collection<Film> result = filmStorage.searchFilm("реж", "director");
+
+        assertThat(result).isNotEmpty();
     }
 }
