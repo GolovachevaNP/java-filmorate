@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.EventOperation;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
@@ -15,14 +17,17 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final UserService userService;
     private final FilmService filmService;
+    private final EventService eventService;
 
     public ReviewService(
             @Qualifier("reviewDbStorage") ReviewStorage reviewStorage,
             @Qualifier("userService") UserService userService,
-            @Qualifier("filmService") FilmService filmService) {
+            @Qualifier("filmService") FilmService filmService,
+            @Qualifier("eventService") EventService eventService) {
         this.reviewStorage = reviewStorage;
         this.userService = userService;
         this.filmService = filmService;
+        this.eventService = eventService;
     }
 
     // создание отзыва
@@ -35,6 +40,9 @@ public class ReviewService {
         log.debug("Создание отзыва: id={}, userId={}, filmId={}",
                 createdReview.getReviewId(), createdReview.getUserId(), createdReview.getFilmId());
 
+        eventService.createEvent(createdReview.getUserId(), createdReview.getReviewId(),
+                EventType.REVIEW, EventOperation.ADD);
+
         return createdReview;
     }
 
@@ -45,21 +53,26 @@ public class ReviewService {
             throw new NotFoundException("Id отзыва должен быть указан");
         }
 
-        findById(updatedReview.getReviewId());
+        Review oldReview = findById(updatedReview.getReviewId());
 
         reviewStorage.update(updatedReview.getContent(), updatedReview.getIsPositive(), updatedReview.getReviewId());
 
         log.debug("Обновление отзыва: id={}", updatedReview.getReviewId());
+
+        eventService.createEvent(oldReview.getUserId(), updatedReview.getReviewId(),
+                EventType.REVIEW, EventOperation.UPDATE);
 
         return findById(updatedReview.getReviewId());
     }
 
     // удаление отзыва
     public void delete(Long reviewId) {
-        findById(reviewId);
+        Review review = findById(reviewId);
         reviewStorage.delete(reviewId);
 
         log.info("Удалён отзыв: id={}", reviewId);
+
+        eventService.createEvent(review.getUserId(), reviewId, EventType.REVIEW, EventOperation.REMOVE);
     }
 
     // получение отзыва по id

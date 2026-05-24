@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.EventOperation;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
@@ -36,6 +38,7 @@ public class FilmService {
     private final FilmGenreService filmGenreService;
     private final FilmLikesService filmLikesService;
     private final FilmDirectorService filmDirectorService;
+    private final EventService eventService;
 
     public FilmService(
             @Qualifier("filmDbStorage") FilmStorage filmStorage,
@@ -50,7 +53,8 @@ public class FilmService {
             @Qualifier("directorService") DirectorService directorService,
             @Qualifier("filmGenreService") FilmGenreService filmGenreService,
             @Qualifier("filmLikesService") FilmLikesService filmLikesService,
-            @Qualifier("filmDirectorService") FilmDirectorService filmDirectorService) {
+            @Qualifier("filmDirectorService") FilmDirectorService filmDirectorService,
+            @Qualifier("eventService") EventService eventService) {
         this.filmStorage = filmStorage;
         this.mpaStorage = mpaStorage;
         this.genreStorage = genreStorage;
@@ -64,6 +68,7 @@ public class FilmService {
         this.filmGenreService = filmGenreService;
         this.filmLikesService = filmLikesService;
         this.filmDirectorService = filmDirectorService;
+        this.eventService = eventService;
     }
 
     // валидация данных фильма
@@ -201,6 +206,8 @@ public class FilmService {
         filmStorage.addLike(filmId, userId);
 
         log.info("Поставлен лайк фильму filmId={} пользователем userId={}", filmId, userId);
+
+        eventService.createEvent(userId, filmId, EventType.LIKE, EventOperation.ADD);
     }
 
     /* удаление лайка фильму
@@ -209,9 +216,17 @@ public class FilmService {
         getFilm(filmId);
         userService.findById(userId);
 
+        Integer count = filmStorage.countLike(filmId, userId);
+        if (count == null || count == 0) {
+            log.warn("У фильма id={} нет лайка пользователя id={}", filmId, userId);
+            return;
+        }
+
         filmStorage.deleteLike(filmId, userId);
 
         log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);
+
+        eventService.createEvent(userId, filmId, EventType.LIKE, EventOperation.REMOVE);
     }
 
     // вывод наиболее популярных фильмов по количеству лайков по жанру за указанный год
