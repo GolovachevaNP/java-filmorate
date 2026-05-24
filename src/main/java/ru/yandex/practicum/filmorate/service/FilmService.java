@@ -216,6 +216,12 @@ public class FilmService {
         getFilm(filmId);
         userService.findById(userId);
 
+        Integer count = filmStorage.countLike(filmId, userId);
+        if (count == null || count == 0) {
+            log.warn("У фильма id={} нет лайка пользователя id={}", filmId, userId);
+            return;
+        }
+
         filmStorage.deleteLike(filmId, userId);
 
         log.info("Удаление лайка: filmId={}, userId={}", filmId, userId);

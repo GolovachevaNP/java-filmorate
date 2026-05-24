@@ -140,6 +140,11 @@ public class UserService {
         findById(userId);
         findById(friendId);
 
+        if (!findById(userId).getFriends().containsKey(friendId)) {
+            log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
+            return;
+        }
+
         userStorage.deleteFriend(userId, friendId);
 
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
