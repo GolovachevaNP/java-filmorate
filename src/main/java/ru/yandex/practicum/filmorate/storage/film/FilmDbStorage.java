@@ -7,9 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.BaseRepository;
 
 import java.sql.Date;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
@@ -32,6 +30,29 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             GROUP BY fl1.film_id
             ORDER BY COUNT(fl_all.user_id) DESC
             """;
+
+    private static final String SEARCH_BY_TITLE_QUERY =
+            "SELECT f.* FROM films f " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
+
+    private static final String SEARCH_BY_DIRECTOR_QUERY =
+            "SELECT f.* FROM films f " +
+                    "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                    "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
+
+    private static final String SEARCH_BY_BOTH_QUERY =
+            "SELECT f.* FROM films f " +
+                    "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
+                    "LEFT JOIN directors d ON fd.director_id = d.director_id " +
+                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
 
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -60,6 +81,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public Optional<Film> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
+    }
+
+    @Override
+    public Collection<Film> searchFilm(String query, String by) {
+        List<String> criteria = Arrays.asList(by.split(","));
+        boolean byTitle = criteria.contains("title");
+        boolean byDirector = criteria.contains("director");
+
+        if (byTitle && byDirector) {
+            return findMany(SEARCH_BY_BOTH_QUERY, query, query);
+        } else if (byTitle) {
+            return findMany(SEARCH_BY_TITLE_QUERY, query);
+        } else if (byDirector) {
+            return findMany(SEARCH_BY_DIRECTOR_QUERY, query);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override

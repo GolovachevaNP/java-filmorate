@@ -109,7 +109,7 @@ public class FilmService {
             throw new NotFoundException("Id фильма должен быть указан");
         }
         validateFilm(updatedFilm);
-        getFilm(updatedFilm.getId());
+        findById(updatedFilm.getId());
 
         filmStorage.update(updatedFilm.getName(), updatedFilm.getDescription(), Date.valueOf(updatedFilm.getReleaseDate()),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId());
@@ -126,7 +126,7 @@ public class FilmService {
     после проверки его существования
      */
     public void delete(Long filmId) {
-        getFilm(filmId);
+        findById(filmId);
 
         filmStorage.delete(filmId);
 
@@ -148,7 +148,7 @@ public class FilmService {
 
     /* FIND_BY_ID_QUERY
     получение фильма по id */
-    public Film getFilm(Long filmId) {
+    public Film findById(Long filmId) {
         log.debug("Получение фильма по id={}", filmId);
 
         Film film = filmStorage.findById(filmId).orElseThrow(() ->
@@ -158,11 +158,22 @@ public class FilmService {
         return film;
     }
 
+    /* SEARCH_BY_TITLE_QUERY / SEARCH_BY_DIRECTOR_QUERY / SEARCH_BY_BOTH_QUERY
+    поиск фильма по запросу */
+    public Collection<Film> searchFilm(String query, String by) {
+        log.debug("Поиск фильма по запросу: query={}, by={}", query, by);
+        Collection<Film> films = filmStorage.searchFilm(query, by);
+        for (Film film : films) {
+            loadFilmDetails(film);
+        }
+        return films;
+    }
+
     /* добавление лайка фильму
     проверка существования фильма и пользователя
     проверка наличия в БД строки с парой film_id + user_id */
     public void addLike(Long filmId, Long userId) {
-        getFilm(filmId);
+        findById(filmId);
         userService.findById(userId);
         Integer count = filmStorage.countLike(filmId, userId);
 
@@ -179,7 +190,7 @@ public class FilmService {
     /* удаление лайка фильму
     проверка существования фильма и пользователя */
     public void deleteLike(Long filmId, Long userId) {
-        getFilm(filmId);
+        findById(filmId);
         userService.findById(userId);
 
         filmStorage.deleteLike(filmId, userId);
@@ -197,7 +208,7 @@ public class FilmService {
 
         List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);
 
-        return topFilmIds.stream().map(this::getFilm).collect(Collectors.toList());
+        return topFilmIds.stream().map(this::findById).collect(Collectors.toList());
     }
 
     /* сохранение связи фильма с жанрами:
@@ -243,7 +254,7 @@ public class FilmService {
         userService.findById(userId);
         userService.findById(friendId);
 
-        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::getFilm).toList();
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::findById).toList();
 
         log.debug("Получение списка общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
         return commonFilms;

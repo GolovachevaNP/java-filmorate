@@ -29,7 +29,7 @@ public class RecommendationService {
         }
 
         return recommendedFilmsId.stream()
-                .map(filmService::getFilm)
+                .map(filmService::findById)
                 .toList();
     }
 }

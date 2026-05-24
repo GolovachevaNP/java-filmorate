@@ -24,6 +24,10 @@ public interface FilmStorage {
     // FIND_BY_ID_QUERY
     Optional<Film> findById(Long id);
 
+    // поиск фильмов по запросу
+    // SEARCH_BY_TITLE_QUERY / SEARCH_BY_DIRECTOR_QUERY / SEARCH_BY_BOTH_QUERY
+    Collection<Film> searchFilm(String query, String by);
+
     // удаление фильма
     // DELETE_QUERY
     void delete(Long id);
