@@ -71,28 +71,31 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             ORDER BY COUNT(fl_all.user_id) DESC
             """;
 
-    private static final String SEARCH_BY_TITLE_QUERY =
-            "SELECT f.* FROM films f " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
-                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
+    private static final String SEARCH_BY_TITLE_QUERY = """
+        SELECT f.* FROM films f
+        LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+        WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+        GROUP BY f.film_id ORDER BY COUNT(DISTINCT fl.user_id) DESC
+        """;
 
-    private static final String SEARCH_BY_DIRECTOR_QUERY =
-            "SELECT f.* FROM films f " +
-                    "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
-                    "LEFT JOIN directors d ON fd.director_id = d.director_id " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
-                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
+private static final String SEARCH_BY_DIRECTOR_QUERY = """
+        SELECT f.* FROM films f
+        LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+        LEFT JOIN directors d ON fd.director_id = d.director_id
+        LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+        WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+        GROUP BY f.film_id ORDER BY COUNT(DISTINCT fl.user_id) DESC
+        """;
 
-    private static final String SEARCH_BY_BOTH_QUERY =
-            "SELECT f.* FROM films f " +
-                    "LEFT JOIN film_directors fd ON f.film_id = fd.film_id " +
-                    "LEFT JOIN directors d ON fd.director_id = d.director_id " +
-                    "LEFT JOIN film_likes fl ON f.film_id = fl.film_id " +
-                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
-                    "OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
-                    "GROUP BY f.film_id ORDER BY COUNT(fl.user_id) DESC";
+private static final String SEARCH_BY_BOTH_QUERY = """
+        SELECT f.* FROM films f
+        LEFT JOIN film_directors fd ON f.film_id = fd.film_id
+        LEFT JOIN directors d ON fd.director_id = d.director_id
+        LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+        WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+        OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+        GROUP BY f.film_id ORDER BY COUNT(DISTINCT fl.user_id) DESC
+        """;
 
     private static final String FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY = """
             SELECT f.*
