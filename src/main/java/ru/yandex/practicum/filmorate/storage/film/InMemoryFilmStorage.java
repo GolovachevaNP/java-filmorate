@@ -47,6 +47,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> searchFilm(String query, String by) {
+        return null;
+    }
+
+    @Override
     public void delete(Long id) {
         films.remove(id);
         likes.remove(id);

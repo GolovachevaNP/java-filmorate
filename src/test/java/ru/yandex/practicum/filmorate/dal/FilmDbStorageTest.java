@@ -16,7 +16,9 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -164,5 +166,77 @@ class FilmDbStorageTest {
         User createdUser = userStorage.create(user);
 
         return createdUser.getId();
+    }
+
+    // Поиск по названию - находит совпадение по подстроке
+    @Test
+    void shouldSearchFilmByTitle() {
+        Film film = createTestFilm();
+        film.setName("Крадущийся тигр");
+        filmStorage.create(film);
+
+        Collection<Film> result = filmStorage.searchFilm("крад", "title");
+
+        assertThat(result).isNotEmpty();
+        assertThat(result).extracting(Film::getName)
+                .anyMatch(name -> name.toLowerCase().contains("крад"));
+    }
+
+    // Поиск по названию - не находит несуществующую подстроку
+    @Test
+    void shouldReturnEmptyWhenSearchByTitleNotFound() {
+        Collection<Film> result = filmStorage.searchFilm("хренознает", "title");
+
+        assertThat(result).isEmpty();
+    }
+
+    // Поиск по обоим критериям - находит по названию
+    @Test
+    void shouldSearchFilmByBothCriteriaMatchingTitle() {
+        Film film = createTestFilm();
+        film.setName("Крадущийся в ночи");
+        filmStorage.create(film);
+
+        Collection<Film> result = filmStorage.searchFilm("крад", "title,director");
+
+        assertThat(result).isNotEmpty();
+        assertThat(result).extracting(Film::getName)
+                .anyMatch(name -> name.toLowerCase().contains("крад"));
+    }
+
+    // Поиск по обоим критериям - пустой результат
+    @Test
+    void shouldReturnEmptyWhenSearchByBothCriteriaNotFound() {
+        Collection<Film> result = filmStorage.searchFilm("хренознает", "title,director");
+
+        assertThat(result).isEmpty();
+    }
+
+    // Результаты отсортированы по популярности
+    @Test
+    void shouldReturnSearchResultsSortedByPopularity() {
+        Film film1 = createTestFilm();
+        film1.setName("Крадущийся тигр");
+        Film created1 = filmStorage.create(film1);
+
+        Film film2 = createTestFilm();
+        film2.setName("Крадущийся дракон");
+        Film created2 = filmStorage.create(film2);
+
+        Long userId = createTestUser();
+        filmStorage.addLike(created2.getId(), userId);
+
+        Collection<Film> result = filmStorage.searchFilm("крад", "title");
+        List<Film> resultList = new ArrayList<>(result);
+
+        assertThat(resultList).hasSize(2);
+        assertThat(resultList.get(0).getId()).isEqualTo(created2.getId());
+    }
+
+    // Поиск по режиссёру
+    @Test
+    void shouldSearchFilmByDirector() {
+         Collection<Film> result = filmStorage.searchFilm("реж", "director");
+         assertThat(result).isNotEmpty();
     }
 }
