@@ -49,10 +49,18 @@ public class FilmController {
 
     // получение фильма по id
     @GetMapping("/{id}")
-    public Film getFilm(@PathVariable Long id) {
-        Film film = filmService.getFilm(id);
+    public Film findById(@PathVariable Long id) {
+        Film film = filmService.findById(id);
         log.info("Найден фильм: id={}, name='{}'", film.getId(), film.getName());
         return film;
+    }
+
+    // поиск фильма по запросу
+    @GetMapping("/search")
+    public Collection<Film> searchFilm(@RequestParam String query, @RequestParam String by) {
+        Collection<Film> films = filmService.searchFilm(query, by);
+        log.info("Поиск фильма по запросу: query={}, by={}", query, by);
+        return films;
     }
 
     // добавление лайка пользователя
@@ -66,7 +74,6 @@ public class FilmController {
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.deleteLike(id, userId);
-        filmService.getFilm(id);
         log.info("Удалён лайк: filmId={}, userId={}", id, userId);
     }
 

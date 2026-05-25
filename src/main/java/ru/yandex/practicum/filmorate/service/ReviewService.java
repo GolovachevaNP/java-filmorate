@@ -33,7 +33,7 @@ public class ReviewService {
     // создание отзыва
     public Review create(Review review) {
         userService.findById(review.getUserId());
-        filmService.getFilm(review.getFilmId());
+        filmService.findById(review.getFilmId());
 
         Review createdReview = reviewStorage.create(review);
 
@@ -88,7 +88,7 @@ public class ReviewService {
     // получение списка отзывов, отсортированных по рейтингу полезности
     public Collection<Review> findAll(Long filmId, int count) {
         if (filmId != null) {
-            filmService.getFilm(filmId);
+            filmService.findById(filmId);
         }
 
         Collection<Review> reviews = reviewStorage.findAll(filmId, count);
