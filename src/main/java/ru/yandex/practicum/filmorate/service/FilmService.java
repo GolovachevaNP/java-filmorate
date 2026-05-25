@@ -211,6 +211,7 @@ public class FilmService {
 
         if (count != null && count > 0) {
             log.warn("У фильма id={} уже есть лайк пользователя id={}", filmId, userId);
+            eventService.createEvent(userId, filmId, EventType.LIKE, EventOperation.ADD);
             return;
         }
 
