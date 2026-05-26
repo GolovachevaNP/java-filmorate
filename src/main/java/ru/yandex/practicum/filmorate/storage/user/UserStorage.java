@@ -25,6 +25,14 @@ public interface UserStorage {
     // FIND_BY_ID_QUERY
     Optional<User> findById(Long id);
 
+    //FIND_FRIENDS_BY_USER_ID_QUERY
+    // получение списка друзей пользователя по id
+    Collection<User> getFriendsByUserId(Long userId);
+
+    //FIND_COMMON_FRIENDS_QUERY
+    // получение списка общих друзей пользователей
+    Collection<User> getCommonFriends(Long userId, Long otherUserId);
+
     // удаление пользователя
     // DELETE_QUERY
     void delete(Long id);

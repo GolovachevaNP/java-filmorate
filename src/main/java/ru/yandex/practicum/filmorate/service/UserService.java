@@ -79,7 +79,6 @@ public class UserService {
             throw new NotFoundException("Id пользователя должен быть указан");
         }
         validateUser(updatedUser);
-        findById(updatedUser.getId());
 
         userStorage.update(updatedUser.getEmail(), updatedUser.getLogin(), updatedUser.getName(),
                 updatedUser.getBirthday() == null ? null : Date.valueOf(updatedUser.getBirthday()), updatedUser.getId());
@@ -146,42 +145,32 @@ public class UserService {
     public void deleteFriend(Long userId, Long friendId) {
         validateUserExists(userId);
         validateUserExists(friendId);
+        User user = findById(userId);
 
-        if (!findById(userId).getFriends().containsKey(friendId)) {
+        if (!user.getFriends().containsKey(friendId)) {
             log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
             return;
         }
 
         userStorage.deleteFriend(userId, friendId);
-
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
-
         eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.REMOVE);
     }
 
     // получение списка друзей пользователя с информацией о них
     public Collection<User> getFriends(Long userId) {
-        User user = findById(userId);
-
-        Collection<User> friends = user.getFriends().keySet().stream()
-                .map(this::findById)
-                .toList();
+        validateUserExists(userId);
 
         log.debug("Получение списка друзей пользователя userId={}", userId);
-        return friends;
+        return userStorage.getFriendsByUserId(userId);
     }
 
     // получение списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        User user = findById(userId);
-        User otherUser = findById(otherUserId);
-
-        Collection<User> commonFriends = user.getFriends().keySet().stream()
-                .filter(friendId -> otherUser.getFriends().containsKey(friendId))
-                .map(this::findById)
-                .toList();
+        validateUserExists(userId);
+        validateUserExists(otherUserId);
 
         log.debug("Получение списка общих друзей пользователей userId={}, otherUserId={}", userId, otherUserId);
-        return commonFriends;
+        return userStorage.getCommonFriends(userId, otherUserId);
     }
 }

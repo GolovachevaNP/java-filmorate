@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -63,6 +64,16 @@ public class InMemoryUserStorage implements UserStorage {
         if (friends != null) {
             friends.remove(friendId);
         }
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        return null;
+    }
+
+    @Override
+    public Collection<User> getFriendsByUserId(Long userId) {
+        return null;
     }
 
     @Override
