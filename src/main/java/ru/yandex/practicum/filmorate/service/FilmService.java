@@ -47,14 +47,14 @@ public class FilmService {
             @Qualifier("filmGenreDbStorage") FilmGenreStorage filmGenreStorage,
             @Qualifier("directorDbStorage") DirectorStorage directorStorage,
             @Qualifier("filmDirectorDbStorage") FilmDirectorStorage filmDirectorStorage,
-            @Qualifier("userService") UserService userService,
-            @Qualifier("mpaService") MpaService mpaService,
-            @Qualifier("genreService") GenreService genreService,
-            @Qualifier("directorService") DirectorService directorService,
-            @Qualifier("filmGenreService") FilmGenreService filmGenreService,
-            @Qualifier("filmLikesService") FilmLikesService filmLikesService,
-            @Qualifier("filmDirectorService") FilmDirectorService filmDirectorService,
-            @Qualifier("eventService") EventService eventService) {
+            UserService userService,
+            MpaService mpaService,
+            GenreService genreService,
+            DirectorService directorService,
+            FilmGenreService filmGenreService,
+            FilmLikesService filmLikesService,
+            FilmDirectorService filmDirectorService,
+            EventService eventService) {
         this.filmStorage = filmStorage;
         this.mpaStorage = mpaStorage;
         this.genreStorage = genreStorage;
@@ -98,6 +98,13 @@ public class FilmService {
         }
     }
 
+    // проверка наличия записи в БД
+    public void validateFilmExists(Long filmId) {
+        if (filmStorage.findById(filmId).isEmpty()) {
+            throw new NotFoundException("Фильм с id = " + filmId + " не найден");
+        }
+    }
+
     /* INSERT_QUERY
     создание фильма
     валидация данных, проверка существования рейтинга MPA
@@ -133,7 +140,7 @@ public class FilmService {
             throw new NotFoundException("Id фильма должен быть указан");
         }
         validateFilm(updatedFilm);
-        findById(updatedFilm.getId());
+        validateFilmExists(updatedFilm.getId());
 
         filmStorage.update(updatedFilm.getName(), updatedFilm.getDescription(), Date.valueOf(updatedFilm.getReleaseDate()),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId());
@@ -205,8 +212,8 @@ public class FilmService {
     проверка существования фильма и пользователя
     проверка наличия в БД строки с парой film_id + user_id */
     public void addLike(Long filmId, Long userId) {
-        findById(filmId);
-        userService.findById(userId);
+        validateFilmExists(filmId);
+        userService.validateUserExists(userId);
         Integer count = filmStorage.countLike(filmId, userId);
 
         if (count != null && count > 0) {
@@ -225,8 +232,8 @@ public class FilmService {
     /* удаление лайка фильму
     проверка существования фильма и пользователя */
     public void deleteLike(Long filmId, Long userId) {
-        findById(filmId);
-        userService.findById(userId);
+        validateFilmExists(filmId);
+        userService.validateUserExists(userId);
 
         Integer count = filmStorage.countLike(filmId, userId);
         if (count == null || count == 0) {
@@ -296,8 +303,8 @@ public class FilmService {
 
     // получение списка общих фильмов
     public Collection<Film> getCommonFilms(Long userId, Long friendId) {
-        userService.findById(userId);
-        userService.findById(friendId);
+        userService.validateUserExists(userId);
+        userService.validateUserExists(friendId);
 
         Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::findById).toList();
 

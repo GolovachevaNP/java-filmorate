@@ -141,7 +141,7 @@ class FilmDbStorageTest {
     void shouldReturnSearchResultsSortedByPopularity() {
         Film film1 = createTestFilm();
         film1.setName("Крадущийся тигр");
-        Film created1 = filmStorage.create(film1);
+        filmStorage.create(film1);
 
         Film film2 = createTestFilm();
         film2.setName("Крадущийся дракон");

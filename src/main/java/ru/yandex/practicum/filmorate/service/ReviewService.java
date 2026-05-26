@@ -21,19 +21,26 @@ public class ReviewService {
 
     public ReviewService(
             @Qualifier("reviewDbStorage") ReviewStorage reviewStorage,
-            @Qualifier("userService") UserService userService,
-            @Qualifier("filmService") FilmService filmService,
-            @Qualifier("eventService") EventService eventService) {
+            UserService userService,
+            FilmService filmService,
+            EventService eventService) {
         this.reviewStorage = reviewStorage;
         this.userService = userService;
         this.filmService = filmService;
         this.eventService = eventService;
     }
 
+    // проверка наличия записи в БД
+    private void validateReviewExists(Long reviewId) {
+        if (reviewStorage.findById(reviewId).isEmpty()) {
+            throw new NotFoundException("Отзыв с id = " + reviewId + " не найден");
+        }
+    }
+
     // создание отзыва
     public Review create(Review review) {
-        userService.findById(review.getUserId());
-        filmService.findById(review.getFilmId());
+        userService.validateUserExists(review.getUserId());
+        filmService.validateFilmExists(review.getFilmId());
 
         Review createdReview = reviewStorage.create(review);
 
@@ -88,7 +95,7 @@ public class ReviewService {
     // получение списка отзывов, отсортированных по рейтингу полезности
     public Collection<Review> findAll(Long filmId, int count) {
         if (filmId != null) {
-            filmService.findById(filmId);
+            filmService.validateFilmExists(filmId);
         }
 
         Collection<Review> reviews = reviewStorage.findAll(filmId, count);
@@ -128,8 +135,8 @@ public class ReviewService {
 
     // добавление оценки отзыву и изменение рейтинга полезности
     private void addRating(Long reviewId, Long userId, boolean isLike) {
-        findById(reviewId);
-        userService.findById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
 
         int newValue = isLike ? 1 : -1;
         Integer oldValue = reviewStorage.findRating(reviewId, userId);
@@ -150,8 +157,8 @@ public class ReviewService {
 
     // удаление оценки и изменение рейтинга полезности
     private void deleteRating(Long reviewId, Long userId, boolean isLikeToDelete) {
-        findById(reviewId);
-        userService.findById(userId);
+        validateReviewExists(reviewId);
+        userService.validateUserExists(userId);
 
         Integer oldValue = reviewStorage.findRating(reviewId, userId);
 

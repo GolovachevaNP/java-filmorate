@@ -22,7 +22,7 @@ public class UserService {
     private final EventService eventService;
 
     public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
-                       @Qualifier("eventService") EventService eventService) {
+                       EventService eventService) {
         this.userStorage = userStorage;
         this.eventService = eventService;
     }
@@ -49,6 +49,13 @@ public class UserService {
         // если имя не указано, используется логин
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
+        }
+    }
+
+    // проверка наличия записи в БД
+    public void validateUserExists(Long userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
         }
     }
 
@@ -87,7 +94,7 @@ public class UserService {
     после проверки его существования
      */
     public void deleteUser(Long userId) {
-        findById(userId);
+        validateUserExists(userId);
 
         userStorage.delete(userId);
     }
@@ -119,8 +126,8 @@ public class UserService {
     /* ADD_FRIEND_QUERY
     добавление одного пользователя в друзья другому после проверки сущестования обоих */
     public void addFriend(Long userId, Long friendId) {
-        findById(userId);
-        findById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
 
         if (userId.equals(friendId)) {
             log.warn("Попытка пользователя добавиться к себе в друзья: userId={}", userId);
@@ -137,8 +144,8 @@ public class UserService {
     /* DELETE_FRIEND_QUERY
     удаление одного пользователя из списка друзей другого после проверки сущестования обоих */
     public void deleteFriend(Long userId, Long friendId) {
-        findById(userId);
-        findById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
 
         if (!findById(userId).getFriends().containsKey(friendId)) {
             log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
