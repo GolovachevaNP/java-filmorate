@@ -115,6 +115,11 @@ private static final String SEARCH_BY_BOTH_QUERY = """
             ORDER BY likes_count DESC
             """;
 
+    private static final String FIND_FILMS_BY_IDS_QUERY = """
+            SELECT * FROM films
+            WHERE film_id IN (%s)
+            """;
+
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
@@ -199,5 +204,17 @@ private static final String SEARCH_BY_BOTH_QUERY = """
     public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
         String sqlQuery = sortByYear ? FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY : FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY;
         return findMany(sqlQuery, directorId);
+    }
+
+    @Override
+    public List<Film> findFilmsByIds(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", java.util.Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(FIND_FILMS_BY_IDS_QUERY, placeholders);
+
+        return findMany(sql, filmIds.toArray());
     }
 }

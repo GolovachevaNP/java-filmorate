@@ -55,7 +55,7 @@ class FilmLikesDbStorageTest {
 
     // Проверка получения популярных фильмов
     @Test
-    void shouldFindTopFilmsByLikes() {
+    void shouldFindPopularFilms() {
         Film film1BeforeSave = createTestFilm("Film1");
         film1BeforeSave.setReleaseDate(LocalDate.of(2000, 12, 1));
         Film film1 = filmStorage.create(film1BeforeSave);
