@@ -258,7 +258,19 @@ public class FilmService {
 
         List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);
 
-        return topFilmIds.stream().map(this::findById).collect(Collectors.toList());
+        if (topFilmIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Film> popularFilms = filmStorage.findFilmsByIds(topFilmIds);
+
+        popularFilms.sort(java.util.Comparator.comparingInt(f -> topFilmIds.indexOf(f.getId())));
+
+        for (Film film : popularFilms) {
+            loadFilmDetails(film);
+        }
+
+        return popularFilms;
     }
 
     /* сохранение связи фильма с жанрами:

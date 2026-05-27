@@ -67,7 +67,6 @@ public interface FilmStorage {
     // FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY : FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY
     Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes);
 
-    // получение списка фильмов по списку ID
-    // FIND_ALL_BY_IDS_QUERY
-    List<Film> findAllByIds(List<Long> ids);
+    // получение списка фильмов по id
+    List<Film> findFilmsByIds(List<Long> filmIds);
 }

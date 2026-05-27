@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.Date;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -145,18 +146,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findAllByIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return List.of();
+    public List<Film> findFilmsByIds(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        List<Film> result = new ArrayList<>();
-        for (Long id : ids) {
-            Film film = films.get(id);
-            if (film != null) {
-                result.add(film);
-            }
-        }
-        return result;
+        return filmIds.stream()
+                .map(films::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }

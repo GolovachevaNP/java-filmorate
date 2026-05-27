@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.FilmDirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -25,9 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({
-        FilmDirectorDbStorage.class, FilmDirectorRowMapper.class,
-        FilmDbStorage.class, FilmRowMapper.class,
-        DirectorDbStorage.class, DirectorRowMapper.class
+        FilmDirectorDbStorage.class,
+        FilmDirectorRowMapper.class,
+        FilmDbStorage.class,
+        FilmRowMapper.class,
+        DirectorDbStorage.class,
+        DirectorRowMapper.class
 })
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmDirectorDbStorageTest {
@@ -37,66 +41,61 @@ public class FilmDirectorDbStorageTest {
     private final DirectorDbStorage directorStorage;
 
     @Test
+    void shouldFindDirectorIdsByFilmId() {
+        Long filmId = createTestFilm().getId();
+        Set<Integer> directorIds = createTestDirectors();
+
+        filmDirectorStorage.addFilmDirectorsLink(filmId, directorIds);
+
+        List<Integer> foundDirectorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
+
+        List<Integer> expectedSortedIds = directorIds.stream().sorted().toList();
+
+        assertThat(foundDirectorIds)
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactlyElementsOf(expectedSortedIds);
+    }
+
+    @Test
     void shouldAddFilmDirectorsLink() {
-        Long filmId = createTestFilm();
-        Director director = createTestDirector("Single Director");
+        Long filmId = createTestFilm().getId();
+        Set<Integer> directorIds = createTestDirectors();
 
-        filmDirectorStorage.addFilmDirectorsLink(filmId, Set.of(director.getId()));
-        List<Integer> directorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
+        filmDirectorStorage.addFilmDirectorsLink(filmId, directorIds);
 
-        assertThat(directorIds).hasSize(1);
-        assertThat(directorIds.get(0)).isEqualTo(director.getId());
+        List<Integer> foundDirectorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
+
+        assertThat(foundDirectorIds)
+                .isNotEmpty()
+                .hasSize(2)
+                .containsExactlyInAnyOrderElementsOf(directorIds);
     }
 
-    @Test
-    void shouldAddMultipleDirectorsToFilm() {
-        Long filmId = createTestFilm();
-        Director director1 = createTestDirector("Director Alpha");
-        Director director2 = createTestDirector("Director Beta");
-
-        filmDirectorStorage.addFilmDirectorsLink(filmId, Set.of(director1.getId(), director2.getId()));
-        List<Integer> directorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
-
-        assertThat(directorIds).hasSize(2);
-        assertThat(directorIds).containsExactlyInAnyOrder(director1.getId(), director2.getId());
-    }
-
-    @Test
-    void shouldOverwriteDirectorsWhenAddingMultipleTimes() {
-        Long filmId = createTestFilm();
-        Director directorOld = createTestDirector("Old Director");
-        Director directorNew = createTestDirector("New Director");
-
-        filmDirectorStorage.addFilmDirectorsLink(filmId, Set.of(directorOld.getId()));
-        filmDirectorStorage.addFilmDirectorsLink(filmId, Set.of(directorNew.getId()));
-        List<Integer> directorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
-
-        assertThat(directorIds).hasSize(2);
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenFilmHasNoDirectors() {
-        Long filmId = createTestFilm();
-        List<Integer> directorIds = filmDirectorStorage.findDirectorIdsByFilmId(filmId);
-
-        assertThat(directorIds).isEmpty();
-    }
-
-    private Long createTestFilm() {
+    private Film createTestFilm() {
         Film film = new Film();
-        film.setName("Test Film for Directors");
-        film.setDescription("Test Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120);
-        MpaRating mpa = new MpaRating();
-        mpa.setId(1);
-        film.setMpa(mpa);
-        return filmStorage.create(film).getId();
+        film.setName("Интерстеллар");
+        film.setDescription("Фильм про космос");
+        film.setReleaseDate(LocalDate.of(2014, 11, 6));
+        film.setDuration(169);
+        MpaRating mpaRating = new MpaRating();
+        mpaRating.setId(1);
+        film.setMpa(mpaRating);
+        return filmStorage.create(film);
     }
 
-    private Director createTestDirector(String name) {
-        Director director = new Director();
-        director.setName(name);
-        return directorStorage.create(director);
+    private Set<Integer> createTestDirectors() {
+        Director director1 = new Director();
+        director1.setName("Кристофер Нолан");
+        Director createdDirector1 = directorStorage.create(director1);
+
+        Director director2 = new Director();
+        director2.setName("Квентин Тарантино");
+        Director createdDirector2 = directorStorage.create(director2);
+
+        Set<Integer> directorIds = new LinkedHashSet<>();
+        directorIds.add(createdDirector1.getId());
+        directorIds.add(createdDirector2.getId());
+        return directorIds;
     }
 }

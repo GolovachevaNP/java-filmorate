@@ -116,12 +116,9 @@ private static final String SEARCH_BY_BOTH_QUERY = """
             ORDER BY likes_count DESC
             """;
 
-    private static final String FIND_ALL_BY_IDS_QUERY = """
-            SELECT f.*, m.name as mpa_name
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
-            WHERE f.film_id IN (%s)
-            ORDER BY f.film_id
+    private static final String FIND_FILMS_BY_IDS_QUERY = """
+            SELECT * FROM films
+            WHERE film_id IN (%s)
             """;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -211,14 +208,14 @@ private static final String SEARCH_BY_BOTH_QUERY = """
     }
 
     @Override
-    public List<Film> findAllByIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return List.of();
+    public List<Film> findFilmsByIds(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return java.util.Collections.emptyList();
         }
 
-        String placeholder = String.join(",", Collections.nCopies(ids.size(), "?"));
-        String query = String.format(FIND_ALL_BY_IDS_QUERY, placeholder);
+        String placeholders = String.join(",", java.util.Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(FIND_FILMS_BY_IDS_QUERY, placeholders);
 
-        return jdbc.query(query, mapper, ids.toArray());
+        return findMany(sql, filmIds.toArray());
     }
 }
