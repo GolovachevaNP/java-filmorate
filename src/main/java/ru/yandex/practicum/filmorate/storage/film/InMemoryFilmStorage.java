@@ -143,4 +143,20 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         return directorFilms;
     }
+
+    @Override
+    public List<Film> findAllByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
+        List<Film> result = new ArrayList<>();
+        for (Long id : ids) {
+            Film film = films.get(id);
+            if (film != null) {
+                result.add(film);
+            }
+        }
+        return result;
+    }
 }

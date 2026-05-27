@@ -360,4 +360,18 @@ public class FilmService {
             throw new NotFoundException("Один или несколько режиссёров не найдены");
         }
     }
+
+    //получение списка фильмов по ID
+    public List<Film> findAllByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<Film> films = filmStorage.findAllByIds(ids);
+
+        for (Film film : films) {
+            loadFilmDetails(film);
+        }
+
+        return films;
+    }
 }
