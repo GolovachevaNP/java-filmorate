@@ -79,6 +79,7 @@ public class UserService {
             throw new NotFoundException("Id пользователя должен быть указан");
         }
         validateUser(updatedUser);
+        validateUserExists(updatedUser.getId());
 
         userStorage.update(updatedUser.getEmail(), updatedUser.getLogin(), updatedUser.getName(),
                 updatedUser.getBirthday() == null ? null : Date.valueOf(updatedUser.getBirthday()), updatedUser.getId());
