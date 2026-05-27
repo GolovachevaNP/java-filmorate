@@ -90,8 +90,23 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Long> getCommonFilms(Long userId, Long friendId) {
-        return List.of();
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        List<Film> commonFilms = new ArrayList<>();
+
+        for (Film film : films.values()) {
+            Set<Long> filmLikes = likes.getOrDefault(film.getId(), Set.of());
+            if (filmLikes.contains(userId) && filmLikes.contains(friendId)) {
+                commonFilms.add(film);
+            }
+        }
+
+        commonFilms.sort((film1, film2) -> {
+            int likes1 = likes.getOrDefault(film1.getId(), Set.of()).size();
+            int likes2 = likes.getOrDefault(film2.getId(), Set.of()).size();
+            return Integer.compare(likes2, likes1);
+        });
+
+        return commonFilms;
     }
 
     @Override

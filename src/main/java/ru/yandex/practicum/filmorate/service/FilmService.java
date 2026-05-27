@@ -306,7 +306,10 @@ public class FilmService {
         userService.validateUserExists(userId);
         userService.validateUserExists(friendId);
 
-        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::findById).toList();
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
+        for (Film film : commonFilms) {
+            loadFilmDetails(film);
+        }
 
         log.debug("Получение списка общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
         return commonFilms;
