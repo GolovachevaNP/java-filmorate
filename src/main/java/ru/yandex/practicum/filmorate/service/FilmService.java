@@ -347,6 +347,20 @@ public class FilmService {
         return films;
     }
 
+    public List<Film> findFilmsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
+        List<Film> films = filmStorage.findFilmsByIds(ids);
+
+        for (Film film : films) {
+            loadFilmDetails(film);
+        }
+
+        return films;
+    }
+
     // извлечение списка id режиссёров
     private Set<Integer> extractDirectorIds(Collection<Director> directors) {
         if (directors == null || directors.isEmpty()) {
