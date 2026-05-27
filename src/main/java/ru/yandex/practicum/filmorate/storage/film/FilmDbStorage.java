@@ -62,12 +62,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             """;
 
     private static final String FIND_COMMON_FILMS_QUERY = """
-            SELECT fl1.film_id
+            SELECT f.*
             FROM film_likes fl1
             JOIN film_likes fl2 ON fl1.film_id = fl2.film_id
+            JOIN films f ON f.film_id = fl1.film_id
             LEFT JOIN film_likes fl_all ON fl1.film_id = fl_all.film_id
             WHERE fl1.user_id = ? AND fl2.user_id = ?
-            GROUP BY fl1.film_id
+            GROUP BY f.film_id
             ORDER BY COUNT(fl_all.user_id) DESC
             """;
 
@@ -113,6 +114,11 @@ private static final String SEARCH_BY_BOTH_QUERY = """
             WHERE fd.director_id = ?
             GROUP BY f.film_id
             ORDER BY likes_count DESC
+            """;
+
+    private static final String FIND_FILMS_BY_IDS_QUERY = """
+            SELECT * FROM films
+            WHERE film_id IN (%s)
             """;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -191,13 +197,25 @@ private static final String SEARCH_BY_BOTH_QUERY = """
     }
 
     @Override
-    public List<Long> getCommonFilms(Long userId, Long friendId) {
-        return jdbc.queryForList(FIND_COMMON_FILMS_QUERY, Long.class, userId, friendId);
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        return findMany(FIND_COMMON_FILMS_QUERY, userId, friendId);
     }
 
     @Override
     public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
         String sqlQuery = sortByYear ? FIND_FILMS_BY_DIRECTOR_SORTED_BY_YEAR_QUERY : FIND_FILMS_BY_DIRECTOR_SORTED_BY_LIKES_QUERY;
         return findMany(sqlQuery, directorId);
+    }
+
+    @Override
+    public List<Film> findFilmsByIds(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", java.util.Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(FIND_FILMS_BY_IDS_QUERY, placeholders);
+
+        return findMany(sql, filmIds.toArray());
     }
 }

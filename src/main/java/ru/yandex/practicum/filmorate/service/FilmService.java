@@ -258,7 +258,19 @@ public class FilmService {
 
         List<Long> topFilmIds = filmLikesService.findTopFilmsByLikes(count, genreId, year);
 
-        return topFilmIds.stream().map(this::findById).collect(Collectors.toList());
+        if (topFilmIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Film> popularFilms = filmStorage.findFilmsByIds(topFilmIds);
+
+        popularFilms.sort(java.util.Comparator.comparingInt(f -> topFilmIds.indexOf(f.getId())));
+
+        for (Film film : popularFilms) {
+            loadFilmDetails(film);
+        }
+
+        return popularFilms;
     }
 
     /* сохранение связи фильма с жанрами:
@@ -306,7 +318,10 @@ public class FilmService {
         userService.validateUserExists(userId);
         userService.validateUserExists(friendId);
 
-        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId).stream().map(this::findById).toList();
+        Collection<Film> commonFilms = filmStorage.getCommonFilms(userId, friendId);
+        for (Film film : commonFilms) {
+            loadFilmDetails(film);
+        }
 
         log.debug("Получение списка общих фильмов пользователей userId={}, friendId ={}", userId, friendId);
         return commonFilms;
@@ -324,6 +339,20 @@ public class FilmService {
         boolean sortByLikes = sortBy.equals("likes");
 
         Collection<Film> films = filmStorage.findAllByDirector(directorId, sortByYear, sortByLikes);
+
+        for (Film film : films) {
+            loadFilmDetails(film);
+        }
+
+        return films;
+    }
+
+    public List<Film> findFilmsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+
+        List<Film> films = filmStorage.findFilmsByIds(ids);
 
         for (Film film : films) {
             loadFilmDetails(film);

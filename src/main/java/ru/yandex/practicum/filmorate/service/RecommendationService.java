@@ -28,8 +28,6 @@ public class RecommendationService {
             return List.of();
         }
 
-        return recommendedFilmsId.stream()
-                .map(filmService::findById)
-                .toList();
+        return filmService.findFilmsByIds(recommendedFilmsId);
     }
 }
