@@ -378,7 +378,7 @@ public class FilmService {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        List<Film> films = filmStorage.findAllByIds(ids);
+        List<Film> films = filmStorage.findFilmsByIds(ids);
 
         for (Film film : films) {
             loadFilmDetails(film);
