@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -68,12 +67,22 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        return null;
+        Map<Long, FriendshipStatus> userFriends = friendships.getOrDefault(userId, Map.of());
+        Map<Long, FriendshipStatus> otherUserFriends = friendships.getOrDefault(otherUserId, Map.of());
+
+        return users.values().stream()
+                .filter(user -> userFriends.containsKey(user.getId()))
+                .filter(user -> otherUserFriends.containsKey(user.getId()))
+                .toList();
     }
 
     @Override
     public Collection<User> getFriendsByUserId(Long userId) {
-        return null;
+        Map<Long, FriendshipStatus> userFriends = friendships.getOrDefault(userId, Map.of());
+
+        return users.values().stream()
+                .filter(user -> userFriends.containsKey(user.getId()))
+                .toList();
     }
 
     @Override

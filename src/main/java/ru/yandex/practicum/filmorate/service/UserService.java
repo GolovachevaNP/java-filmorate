@@ -144,9 +144,8 @@ public class UserService {
     /* DELETE_FRIEND_QUERY
     удаление одного пользователя из списка друзей другого после проверки сущестования обоих */
     public void deleteFriend(Long userId, Long friendId) {
-        validateUserExists(userId);
-        validateUserExists(friendId);
         User user = findById(userId);
+        validateUserExists(friendId);
 
         if (!user.getFriends().containsKey(friendId)) {
             log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
@@ -154,7 +153,9 @@ public class UserService {
         }
 
         userStorage.deleteFriend(userId, friendId);
+
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
+
         eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.REMOVE);
     }
 

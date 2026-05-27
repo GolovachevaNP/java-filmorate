@@ -59,16 +59,16 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             """;
 
     private static final String FIND_FRIENDS_BY_USER_ID_QUERY = """
-        SELECT u.* FROM users u
-        JOIN friendships f ON u.user_id = f.friend_id
-        WHERE f.user_id = ?
-        """;
+            SELECT u.* FROM users u
+            JOIN friendships f ON u.user_id = f.friend_id
+            WHERE f.user_id = ?
+            """;
 
     private static final String FIND_COMMON_FRIENDS_QUERY = """
-        SELECT u.* FROM users u
-        JOIN friendships f1 ON u.user_id = f1.friend_id AND f1.user_id = ?
-        JOIN friendships f2 ON u.user_id = f2.friend_id AND f2.user_id = ?
-        """;
+            SELECT u.* FROM users u
+            JOIN friendships f1 ON u.user_id = f1.friend_id AND f1.user_id = ?
+            JOIN friendships f2 ON u.user_id = f2.friend_id AND f2.user_id = ?
+            """;
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
