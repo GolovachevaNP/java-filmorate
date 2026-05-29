@@ -16,19 +16,59 @@ import java.util.Optional;
 @Repository("userDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
-    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ? ";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM users ORDER BY user_id";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
-    private static final String DELETE_QUERY = "DELETE FROM users WHERE user_id = ?";
+    private static final String INSERT_QUERY = """
+            INSERT INTO users(email, login, name, birthday)
+            VALUES (?, ?, ?, ?)
+            """;
+
+    private static final String UPDATE_QUERY = """
+            UPDATE users SET email = ?, login = ?, name = ?, birthday = ?
+            WHERE user_id = ?
+            """;
+
+    private static final String FIND_ALL_QUERY = """
+            SELECT * FROM users
+            ORDER BY user_id
+            """;
+
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT * FROM users
+            WHERE user_id = ?
+            """;
+
+    private static final String DELETE_QUERY = """
+            DELETE FROM users
+            WHERE user_id = ?
+            """;
+
     private static final String FIND_FRIENDS_QUERY = """
             SELECT f.friend_id, fs.name AS status_name
             FROM friendships f
             JOIN friendship_statuses fs ON f.status_id = fs.id
             WHERE f.user_id = ?
             """;
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendships (user_id, friend_id, status_id) VALUES (?, ?, ?)";
-    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
+
+    private static final String ADD_FRIEND_QUERY = """
+            INSERT INTO friendships (user_id, friend_id, status_id)
+            VALUES (?, ?, ?)
+            """;
+
+    private static final String DELETE_FRIEND_QUERY = """
+            DELETE FROM friendships
+            WHERE user_id = ? AND friend_id = ?
+            """;
+
+    private static final String FIND_FRIENDS_BY_USER_ID_QUERY = """
+            SELECT u.* FROM users u
+            JOIN friendships f ON u.user_id = f.friend_id
+            WHERE f.user_id = ?
+            """;
+
+    private static final String FIND_COMMON_FRIENDS_QUERY = """
+            SELECT u.* FROM users u
+            JOIN friendships f1 ON u.user_id = f1.friend_id AND f1.user_id = ?
+            JOIN friendships f2 ON u.user_id = f2.friend_id AND f2.user_id = ?
+            """;
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -59,8 +99,18 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     @Override
+    public Collection<User> getFriendsByUserId(Long userId) {
+        return findMany(FIND_FRIENDS_BY_USER_ID_QUERY, userId);
+    }
+
+    @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        return findMany(FIND_COMMON_FRIENDS_QUERY, userId, otherUserId);
+    }
+
+    @Override
     public void delete(Long id) {
-        delete(DELETE_QUERY, id);
+        super.delete(DELETE_QUERY, id);
     }
 
     @Override

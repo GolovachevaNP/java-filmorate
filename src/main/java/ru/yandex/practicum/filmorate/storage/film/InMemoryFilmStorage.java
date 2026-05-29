@@ -5,13 +5,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.Date;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -53,6 +48,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> searchFilm(String query, String by) {
+        return null;
+    }
+
+    @Override
     public void delete(Long id) {
         films.remove(id);
         likes.remove(id);
@@ -88,5 +88,72 @@ public class InMemoryFilmStorage implements FilmStorage {
         MpaRating mpa = new MpaRating();
         mpa.setId(mpaId);
         return mpa;
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        List<Film> commonFilms = new ArrayList<>();
+
+        for (Film film : films.values()) {
+            Set<Long> filmLikes = likes.getOrDefault(film.getId(), Set.of());
+            if (filmLikes.contains(userId) && filmLikes.contains(friendId)) {
+                commonFilms.add(film);
+            }
+        }
+
+        commonFilms.sort((film1, film2) -> {
+            int likes1 = likes.getOrDefault(film1.getId(), Set.of()).size();
+            int likes2 = likes.getOrDefault(film2.getId(), Set.of()).size();
+            return Integer.compare(likes2, likes1);
+        });
+
+        return commonFilms;
+    }
+
+    @Override
+    public void deleteDirectors(Long filmId) {
+        Film film = films.get(filmId);
+        if (film != null && film.getDirectors() != null) {
+            film.getDirectors().clear();
+        }
+    }
+
+    @Override
+    public Collection<Film> findAllByDirector(Integer directorId, boolean sortByYear, boolean sortByLikes) {
+        List<Film> directorFilms = new ArrayList<>();
+
+        for (Film film : films.values()) {
+            if (film.getDirectors() != null) {
+                boolean hasDirector = film.getDirectors().stream()
+                        .anyMatch(d -> d.getId().equals(directorId));
+                if (hasDirector) {
+                    directorFilms.add(film);
+                }
+            }
+        }
+
+        if (sortByYear) {
+            directorFilms.sort(Comparator.comparing(Film::getReleaseDate, Comparator.nullsLast(Comparator.naturalOrder())));
+        } else if (sortByLikes) {
+            directorFilms.sort((f1, f2) -> {
+                int likes1 = likes.getOrDefault(f1.getId(), Set.of()).size();
+                int likes2 = likes.getOrDefault(f2.getId(), Set.of()).size();
+                return Integer.compare(likes2, likes1);
+            });
+        }
+
+        return directorFilms;
+    }
+
+    @Override
+    public List<Film> findFilmsByIds(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return filmIds.stream()
+                .map(films::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }

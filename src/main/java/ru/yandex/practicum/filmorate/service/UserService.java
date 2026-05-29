@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.EventOperation;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -17,9 +19,12 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
+                       EventService eventService) {
         this.userStorage = userStorage;
+        this.eventService = eventService;
     }
 
     // валидация данных пользователя
@@ -47,6 +52,13 @@ public class UserService {
         }
     }
 
+    // проверка наличия записи в БД
+    public void validateUserExists(Long userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+    }
+
     /* INSERT_QUERY
     создание пользователя, валидация данных */
     public User create(User user) {
@@ -67,7 +79,7 @@ public class UserService {
             throw new NotFoundException("Id пользователя должен быть указан");
         }
         validateUser(updatedUser);
-        findById(updatedUser.getId());
+        validateUserExists(updatedUser.getId());
 
         userStorage.update(updatedUser.getEmail(), updatedUser.getLogin(), updatedUser.getName(),
                 updatedUser.getBirthday() == null ? null : Date.valueOf(updatedUser.getBirthday()), updatedUser.getId());
@@ -75,6 +87,16 @@ public class UserService {
         log.debug("Обновление пользователя: id={}", updatedUser.getId());
 
         return updatedUser;
+    }
+
+    /* DELETE_QUERY
+    удаление пользователя по Id
+    после проверки его существования
+     */
+    public void deleteUser(Long userId) {
+        validateUserExists(userId);
+
+        userStorage.delete(userId);
     }
 
     /* FIND_ALL_QUERY
@@ -104,8 +126,8 @@ public class UserService {
     /* ADD_FRIEND_QUERY
     добавление одного пользователя в друзья другому после проверки сущестования обоих */
     public void addFriend(Long userId, Long friendId) {
-        findById(userId);
-        findById(friendId);
+        validateUserExists(userId);
+        validateUserExists(friendId);
 
         if (userId.equals(friendId)) {
             log.warn("Попытка пользователя добавиться к себе в друзья: userId={}", userId);
@@ -115,42 +137,42 @@ public class UserService {
         userStorage.addFriend(userId, friendId);
 
         log.info("Пользователь userId={} добавил в друзья пользователя friendId={}", userId, friendId);
+
+        eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.ADD);
     }
 
     /* DELETE_FRIEND_QUERY
     удаление одного пользователя из списка друзей другого после проверки сущестования обоих */
     public void deleteFriend(Long userId, Long friendId) {
-        findById(userId);
-        findById(friendId);
+        User user = findById(userId);
+        validateUserExists(friendId);
+
+        if (!user.getFriends().containsKey(friendId)) {
+            log.warn("Пользователя friendId={} нет в друзьях у пользователя userId={}", friendId, userId);
+            return;
+        }
 
         userStorage.deleteFriend(userId, friendId);
 
         log.info("Удаление пользователя friendId={} из друзей пользователя userId={}", friendId, userId);
+
+        eventService.createEvent(userId, friendId, EventType.FRIEND, EventOperation.REMOVE);
     }
 
     // получение списка друзей пользователя с информацией о них
     public Collection<User> getFriends(Long userId) {
-        User user = findById(userId);
-
-        Collection<User> friends = user.getFriends().keySet().stream()
-                .map(this::findById)
-                .toList();
+        validateUserExists(userId);
 
         log.debug("Получение списка друзей пользователя userId={}", userId);
-        return friends;
+        return userStorage.getFriendsByUserId(userId);
     }
 
-    // получние списка общих друзей
+    // получение списка общих друзей
     public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
-        User user = findById(userId);
-        User otherUser = findById(otherUserId);
-
-        Collection<User> commonFriends = user.getFriends().keySet().stream()
-                .filter(friendId -> otherUser.getFriends().containsKey(friendId))
-                .map(this::findById)
-                .toList();
+        validateUserExists(userId);
+        validateUserExists(otherUserId);
 
         log.debug("Получение списка общих друзей пользователей userId={}, otherUserId={}", userId, otherUserId);
-        return commonFriends;
+        return userStorage.getCommonFriends(userId, otherUserId);
     }
 }

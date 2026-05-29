@@ -6,5 +6,5 @@ public interface FilmLikesStorage {
 
     Long countByFilmId(Long id);
 
-    List<Long> findTopFilmsByLikes(int count);
+    List<Long> findTopFilmsByLikes(int count, Integer genreId, Integer year);
 }

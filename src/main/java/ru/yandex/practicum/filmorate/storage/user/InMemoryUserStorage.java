@@ -66,6 +66,26 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public Collection<User> getCommonFriends(Long userId, Long otherUserId) {
+        Map<Long, FriendshipStatus> userFriends = friendships.getOrDefault(userId, Map.of());
+        Map<Long, FriendshipStatus> otherUserFriends = friendships.getOrDefault(otherUserId, Map.of());
+
+        return users.values().stream()
+                .filter(user -> userFriends.containsKey(user.getId()))
+                .filter(user -> otherUserFriends.containsKey(user.getId()))
+                .toList();
+    }
+
+    @Override
+    public Collection<User> getFriendsByUserId(Long userId) {
+        Map<Long, FriendshipStatus> userFriends = friendships.getOrDefault(userId, Map.of());
+
+        return users.values().stream()
+                .filter(user -> userFriends.containsKey(user.getId()))
+                .toList();
+    }
+
+    @Override
     public Map<Long, FriendshipStatus> findFriends(User user) {
         return new HashMap<>(friendships.getOrDefault(user.getId(), Map.of()));
     }
